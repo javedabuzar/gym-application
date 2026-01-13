@@ -12,6 +12,28 @@ export const GymProvider = ({ children }) => {
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // New System Settings (Mock Database)
+    const [creatineSettings, setCreatineSettings] = useState({
+        pricePerGram: 1.5, // $ per gram
+        isAuto: true
+    });
+
+    const [cardioSettings, setCardioSettings] = useState({
+        weeklyPrice: 15,
+        monthlyPrice: 50,
+        unlimitedMultiplier: 1.5, // 50% extra for unlimited
+        manualOverride: false
+    });
+
+    const [ptSettings, setPtSettings] = useState({
+        rates: {
+            beginner: 30, // per session
+            certified: 50,
+            elite: 80
+        },
+        manualDiscountAllowed: true
+    });
+
     useEffect(() => {
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -169,7 +191,10 @@ export const GymProvider = ({ children }) => {
             login,
             logout,
             addClass,
-            removeClass
+            removeClass,
+            creatineSettings, setCreatineSettings,
+            cardioSettings, setCardioSettings,
+            ptSettings, setPtSettings
         }}>
             {children}
         </GymContext.Provider>

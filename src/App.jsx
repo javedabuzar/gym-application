@@ -8,6 +8,10 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import AttendanceQR from './pages/AttendanceQR';
+import Creatine from './pages/Creatine';
+import Cardio from './pages/Cardio';
+import PersonalTraining from './pages/PersonalTraining';
+import TrainingPlan from './pages/TrainingPlan';
 import { useGym } from './context/GymContext';
 
 const ProtectedRoute = ({ children }) => {
@@ -28,6 +32,10 @@ function App() {
                     <Route path="reports" element={<Reports />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="scan" element={<AttendanceQR />} />
+                    <Route path="creatine" element={<Creatine />} />
+                    <Route path="cardio" element={<Cardio />} />
+                    <Route path="training" element={<PersonalTraining />} />
+                    <Route path="plans" element={<TrainingPlan />} />
                 </Route>
             </Routes>
         </BrowserRouter>
