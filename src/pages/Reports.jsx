@@ -69,11 +69,11 @@ const Reports = () => {
                         </div>
                         <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5">
                             <p className="text-gray-400 text-sm">Fees Collected</p>
-                            <h3 className="text-2xl font-bold text-gym-neon">${reportData.feesCollected}</h3>
+                            <h3 className="text-2xl font-bold text-gym-neon">Rs. {reportData.feesCollected}</h3>
                         </div>
                         <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5">
                             <p className="text-gray-400 text-sm">Fees Pending</p>
-                            <h3 className="text-2xl font-bold text-red-400">${reportData.feesPending}</h3>
+                            <h3 className="text-2xl font-bold text-red-400">Rs. {reportData.feesPending}</h3>
                         </div>
                     </div>
 

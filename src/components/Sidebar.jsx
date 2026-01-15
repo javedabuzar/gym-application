@@ -14,10 +14,11 @@ const Sidebar = () => {
         { icon: Calendar, label: 'Schedule', path: '/schedule' },
         { icon: FileText, label: 'Reports', path: '/reports' },
         { icon: QrCode, label: 'QR Scan', path: '/scan' },
-        { icon: FlaskConical, label: 'Creatine', path: '/creatine' },
+        { icon: FlaskConical, label: 'Supplements', path: '/supplements' },
         { icon: Bike, label: 'Cardio', path: '/cardio' },
         { icon: Dumbbell, label: 'Training', path: '/training' },
         { icon: Notebook, label: 'Plans', path: '/plans' },
+        { icon: FileText, label: 'Slip / Invoice', path: '/invoice' },
     ];
 
     const handleLogout = () => {

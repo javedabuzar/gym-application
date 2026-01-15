@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
+import { useGym } from '../context/GymContext';
 
 const Settings = () => {
+    const { baseGymFee, setBaseGymFee } = useGym();
+
+    // Local state
     const [gymName, setGymName] = useState('Ultimate Cyber Blue Gym');
-    const [defaultFee, setDefaultFee] = useState(50);
+    const [localFee, setLocalFee] = useState(baseGymFee);
+
+    useEffect(() => {
+        setLocalFee(baseGymFee);
+    }, [baseGymFee]);
 
     const handleSave = () => {
+        setBaseGymFee(parseFloat(localFee));
         alert('Settings Saved!');
     };
 
@@ -28,11 +37,11 @@ const Settings = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-gray-400 mb-2">Default Member Fee ($)</label>
+                        <label className="block text-gray-400 mb-2">Default Member Fee (Rs)</label>
                         <input
                             type="number"
-                            value={defaultFee}
-                            onChange={(e) => setDefaultFee(e.target.value)}
+                            value={localFee}
+                            onChange={(e) => setLocalFee(e.target.value)}
                             className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-gym-neon"
                         />
                     </div>

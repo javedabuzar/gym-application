@@ -1,36 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGym } from '../context/GymContext';
-import { Settings, Bike, Timer, Zap, CheckCircle } from 'lucide-react';
+import { Settings, Bike, Timer, Zap, CheckCircle, Save } from 'lucide-react';
 
 const Cardio = () => {
-    const { members, cardioSettings, setCardioSettings } = useGym();
+    const { members, cardioSettings, setCardioSettings, cardioSubscriptions, setCardioSubscriptions } = useGym();
     const [showSettings, setShowSettings] = useState(false);
 
-    // Calculator State
-    const [calculator, setCalculator] = useState({
-        duration: 'Monthly', // Weekly, Monthly
-        type: 'Limited' // Limited, Unlimited
-    });
+    // Local state for settings
+    const [localSettings, setLocalSettings] = useState({ ...cardioSettings });
 
-    // Mock Member Subscriptions
-    const [subscriptions, setSubscriptions] = useState({});
+    useEffect(() => {
+        setLocalSettings(cardioSettings);
+    }, [cardioSettings]);
 
-    const calculatePrice = (duration, type) => {
-        let basePrice = duration === 'Weekly' ? cardioSettings.weeklyPrice : cardioSettings.monthlyPrice;
-
-        if (type === 'Unlimited') {
-            basePrice = basePrice * cardioSettings.unlimitedMultiplier;
-        }
-
-        return basePrice.toFixed(2);
+    const handleSaveSettings = () => {
+        setCardioSettings(localSettings);
+        alert("Settings Saved Successfully!");
+        setShowSettings(false);
     };
 
-    const handleSubscribe = (memberId, plan) => {
-        const price = calculatePrice(plan.duration, plan.type);
-        setSubscriptions(prev => ({
+    // Calculator State - Locked to Monthly Unlimited
+    const [calculator] = useState({
+        duration: 'Monthly',
+        type: 'Unlimited'
+    });
+
+    const calculatePrice = () => {
+        // Price is Monthly Base * Unlimited Multiplier
+        return (localSettings.monthlyPrice * localSettings.unlimitedMultiplier).toFixed(2);
+    };
+
+    const handleSubscribe = (memberId) => {
+        const price = calculatePrice();
+        setCardioSubscriptions(prev => ({
             ...prev,
             [memberId]: {
-                ...plan,
+                duration: 'Monthly',
+                type: 'Unlimited',
                 price: price,
                 active: true,
                 startDate: new Date().toLocaleDateString()
@@ -61,22 +67,13 @@ const Cardio = () => {
             {showSettings && (
                 <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5 animate-fadeIn">
                     <h3 className="text-xl font-bold text-white mb-4">Pricing Configuration</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-gray-400 text-sm">Weekly Base Price ($)</label>
+                            <label className="text-gray-400 text-sm">Monthly Base Price (PKR)</label>
                             <input
                                 type="number"
-                                value={cardioSettings.weeklyPrice}
-                                onChange={(e) => setCardioSettings(prev => ({ ...prev, weeklyPrice: parseFloat(e.target.value) }))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-gray-400 text-sm">Monthly Base Price ($)</label>
-                            <input
-                                type="number"
-                                value={cardioSettings.monthlyPrice}
-                                onChange={(e) => setCardioSettings(prev => ({ ...prev, monthlyPrice: parseFloat(e.target.value) }))}
+                                value={localSettings.monthlyPrice}
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, monthlyPrice: parseFloat(e.target.value) }))}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
                             />
                         </div>
@@ -85,49 +82,44 @@ const Cardio = () => {
                             <input
                                 type="number"
                                 step="0.1"
-                                value={cardioSettings.unlimitedMultiplier}
-                                onChange={(e) => setCardioSettings(prev => ({ ...prev, unlimitedMultiplier: parseFloat(e.target.value) }))}
+                                value={localSettings.unlimitedMultiplier}
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, unlimitedMultiplier: parseFloat(e.target.value) }))}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
                             />
                         </div>
                     </div>
+                    <div className="mt-6 flex justify-end">
+                        <button
+                            onClick={handleSaveSettings}
+                            className="bg-gym-neon text-black px-6 py-2 rounded-xl font-bold hover:bg-[#2ecc11] transition-colors shadow-[0_0_15px_rgba(57,255,20,0.3)] flex items-center gap-2"
+                        >
+                            <Save size={18} />
+                            Save Configuration
+                        </button>
+                    </div>
                 </div>
             )}
 
-            {/* Quick Calculator */}
+            {/* Quick Calculator / Plan Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <Zap className="text-gym-neon" />
-                        Price Calculator
+                        Plan Details
                     </h3>
                     <div className="space-y-4">
-                        <div className="flex bg-black/30 p-1 rounded-xl">
-                            {['Weekly', 'Monthly'].map(d => (
-                                <button
-                                    key={d}
-                                    onClick={() => setCalculator(prev => ({ ...prev, duration: d }))}
-                                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${calculator.duration === d ? 'bg-gym-neon text-black' : 'text-gray-400 hover:text-white'}`}
-                                >
-                                    {d}
-                                </button>
-                            ))}
+                        <div className="bg-black/30 p-4 rounded-xl flex justify-between items-center">
+                            <span className="text-gray-400">Duration</span>
+                            <span className="font-bold text-white">Monthly</span>
                         </div>
-                        <div className="flex bg-black/30 p-1 rounded-xl">
-                            {['Limited', 'Unlimited'].map(t => (
-                                <button
-                                    key={t}
-                                    onClick={() => setCalculator(prev => ({ ...prev, type: t }))}
-                                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${calculator.type === t ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'}`}
-                                >
-                                    {t}
-                                </button>
-                            ))}
+                        <div className="bg-black/30 p-4 rounded-xl flex justify-between items-center">
+                            <span className="text-gray-400">Access Type</span>
+                            <span className="font-bold text-gym-neon">Unlimited</span>
                         </div>
                         <div className="pt-4 border-t border-white/10 text-center">
-                            <p className="text-gray-400 text-sm">Estimated Price</p>
+                            <p className="text-gray-400 text-sm">Total Price</p>
                             <div className="text-4xl font-bold text-white mt-1">
-                                ${calculatePrice(calculator.duration, calculator.type)}
+                                Rs. {calculatePrice()}
                             </div>
                         </div>
                     </div>
@@ -137,17 +129,11 @@ const Cardio = () => {
                     <div className="w-16 h-16 bg-gym-neon/10 rounded-full flex items-center justify-center text-gym-neon mb-2">
                         <Timer size={32} />
                     </div>
-                    <h3 className="text-xl font-bold text-white">Plan Comparison</h3>
-                    <div className="w-full space-y-3">
-                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                            <span className="text-gray-400">Limited</span>
-                            <span className="text-white">Fixed Hours Access</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                            <span className="text-gray-400">Unlimited</span>
-                            <span className="text-white">24/7 Access + Priority</span>
-                        </div>
-                    </div>
+                    <h3 className="text-xl font-bold text-white">Monthly Unlimited</h3>
+                    <p className="text-gray-400 max-w-xs">
+                        Full access to all cardio equipment with no time restrictions.
+                        Valid for 30 days from sign-up.
+                    </p>
                 </div>
             </div>
 
@@ -169,7 +155,7 @@ const Cardio = () => {
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {members.map((member) => {
-                                const sub = subscriptions[member.id];
+                                const sub = cardioSubscriptions[member.id];
                                 return (
                                     <tr key={member.id} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4">
@@ -202,10 +188,10 @@ const Cardio = () => {
                                                 </div>
                                             ) : (
                                                 <button
-                                                    onClick={() => handleSubscribe(member.id, calculator)}
+                                                    onClick={() => handleSubscribe(member.id)}
                                                     className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
                                                 >
-                                                    Assign Current Selection
+                                                    Assign Plan
                                                 </button>
                                             )}
                                         </td>

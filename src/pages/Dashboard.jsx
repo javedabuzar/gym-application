@@ -73,7 +73,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="Total Members" value={totalMembers} change="0%" icon={Users} color="blue" />
                 <StatCard title="Active Members" value={activeMembers} change="0%" icon={Activity} color="green" />
-                <StatCard title="Fees Collected" value={`$${totalRevenue}`} change="0%" icon={DollarSign} color="yellow" />
+                <StatCard title="Fees Collected" value={`Rs. ${totalRevenue}`} change="0%" icon={DollarSign} color="yellow" />
                 <StatCard title="Total Attendance" value={totalAttendance} change="0%" icon={Users} color="purple" />
             </div>
 

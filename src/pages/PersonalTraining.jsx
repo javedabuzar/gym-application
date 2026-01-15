@@ -1,191 +1,197 @@
+
 import React, { useState } from 'react';
 import { useGym } from '../context/GymContext';
-import { Settings, UserCheck, DollarSign, Dumbbell } from 'lucide-react';
+import { Dumbbell, Settings, UserCheck, Star, Trophy, Users, Save } from 'lucide-react';
 
 const PersonalTraining = () => {
-    const { members, ptSettings, setPtSettings } = useGym();
+    const { members, ptSettings, setPtSettings, ptSubscriptions, setPtSubscriptions } = useGym();
     const [showSettings, setShowSettings] = useState(false);
 
-    // Calculator State
-    const [sessionConfig, setSessionConfig] = useState({
-        trainerLevel: 'certified', // beginner, certified, elite
-        packageType: 'session', // session, weekly, monthly
-        count: 1, // Number of sessions or weeks/months
-        manualDiscount: 0
-    });
+    // Simple state for user selection
+    const [selectedDuration, setSelectedDuration] = useState('one_month');
 
-    const calculateTotal = () => {
-        let rate = ptSettings.rates[sessionConfig.trainerLevel] || 0;
-        let multiplier = sessionConfig.count;
+    // Local state for settings
+    const [localSettings, setLocalSettings] = useState({ ...ptSettings.rates });
 
-        // Simple logic: Weekly = 3 sessions/week, Monthly = 12 sessions/month
-        if (sessionConfig.packageType === 'weekly') multiplier *= 3;
-        if (sessionConfig.packageType === 'monthly') multiplier *= 12;
+    React.useEffect(() => {
+        setLocalSettings(ptSettings.rates);
+    }, [ptSettings]);
 
-        let total = rate * multiplier;
-
-        if (ptSettings.manualDiscountAllowed && sessionConfig.manualDiscount > 0) {
-            total -= sessionConfig.manualDiscount;
-        }
-
-        return Math.max(0, total).toFixed(2);
+    const handleSaveSettings = () => {
+        setPtSettings(prev => ({ ...prev, rates: localSettings }));
+        alert("Settings Saved Successfully!");
+        setShowSettings(false);
     };
+
+    const handleSubscribe = (memberId) => {
+        setPtSubscriptions(prev => ({
+            ...prev,
+            [memberId]: {
+                duration: selectedDuration,
+                price: ptSettings.rates[selectedDuration],
+                active: true,
+                startDate: new Date().toLocaleDateString()
+            }
+        }));
+    };
+
+    const durations = [
+        { id: 'one_month', name: '1 Month', icon: UserCheck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+        { id: 'six_months', name: '6 Months', icon: Star, color: 'text-gym-neon', bg: 'bg-gym-neon/10' },
+        { id: 'one_year', name: '1 Year', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-400/10' }
+    ];
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-3xl font-bold text-white flex items-center gap-3">
                         <Dumbbell className="text-gym-neon" size={32} />
                         Personal Training
                     </h2>
-                    <p className="text-gray-400 mt-1">Trainer billing and session management</p>
+                    <p className="text-gray-400 mt-1">Duration-based Personal Training Subscriptions</p>
                 </div>
                 <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className={`px-4 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-2 ${showSettings ? 'bg-gym-neon text-black' : 'bg-white/5 text-white hover:bg-white/10'}`}
+                    className="bg-white/5 hover:bg-white/10 text-white p-3 rounded-xl transition-all border border-white/10"
                 >
                     <Settings size={20} />
-                    Admin Settings
                 </button>
             </div>
 
             {/* Admin Settings */}
             {showSettings && (
                 <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5 animate-fadeIn">
-                    <h3 className="text-xl font-bold text-white mb-4">Trainer Rates Configuration</h3>
+                    <h3 className="text-xl font-bold text-white mb-4">Rate Configuration</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {['beginner', 'certified', 'elite'].map(level => (
-                            <div key={level} className="space-y-2">
-                                <label className="text-gray-400 text-sm capitalize">{level} Rate ($/session)</label>
-                                <input
-                                    type="number"
-                                    value={ptSettings.rates[level]}
-                                    onChange={(e) => setPtSettings(prev => ({
-                                        ...prev,
-                                        rates: { ...prev.rates, [level]: parseFloat(e.target.value) }
-                                    }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
-                                />
-                            </div>
-                        ))}
+                        <div className="space-y-2">
+                            <label className="text-gray-400 text-sm">1 Month (PKR)</label>
+                            <input
+                                type="number"
+                                value={localSettings.one_month}
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, one_month: parseFloat(e.target.value) }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-gray-400 text-sm">6 Months (PKR)</label>
+                            <input
+                                type="number"
+                                value={localSettings.six_months}
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, six_months: parseFloat(e.target.value) }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-gray-400 text-sm">1 Year (PKR)</label>
+                            <input
+                                type="number"
+                                value={localSettings.one_year}
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, one_year: parseFloat(e.target.value) }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <button
+                            onClick={handleSaveSettings}
+                            className="bg-gym-neon text-black px-6 py-2 rounded-xl font-bold hover:bg-[#2ecc11] transition-colors shadow-[0_0_15px_rgba(57,255,20,0.3)] flex items-center gap-2"
+                        >
+                            <Save size={18} />
+                            Save Configuration
+                        </button>
                     </div>
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Billing Calculator */}
-                <div className="bg-gym-card backdrop-blur-xl p-8 rounded-2xl border border-white/5">
-                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                        <DollarSign className="text-gym-neon" />
-                        Billing Calculator
-                    </h3>
-
-                    <div className="space-y-6">
-                        <div>
-                            <label className="block text-gray-400 text-sm mb-2">Trainer Level</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {['beginner', 'certified', 'elite'].map(level => (
-                                    <button
-                                        key={level}
-                                        onClick={() => setSessionConfig(prev => ({ ...prev, trainerLevel: level }))}
-                                        className={`py-3 rounded-xl text-sm font-bold capitalize transition-all ${sessionConfig.trainerLevel === level
-                                            ? 'bg-gym-neon text-black shadow-[0_0_15px_rgba(57,255,20,0.2)]'
-                                            : 'bg-black/30 text-gray-400 hover:text-white'}`}
-                                    >
-                                        {level}
-                                    </button>
-                                ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* 1. Select Duration */}
+                <div className="lg:col-span-1 bg-gym-card backdrop-blur-xl rounded-2xl border border-white/5 p-6 h-fit">
+                    <h3 className="text-xl font-bold text-white mb-4">1. Select Duration</h3>
+                    <div className="space-y-4">
+                        {durations.map((d) => (
+                            <div
+                                key={d.id}
+                                onClick={() => setSelectedDuration(d.id)}
+                                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${selectedDuration === d.id
+                                    ? 'bg-white/10 border-gym-neon'
+                                    : 'bg-transparent border-white/10 hover:bg-white/5'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-12 h-12 rounded-full ${d.bg} flex items-center justify-center ${d.color}`}>
+                                        <d.icon size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white text-lg">{d.name}</h4>
+                                        <div className="text-sm font-bold text-gym-neon">Rs. {ptSettings.rates[d.id].toLocaleString()}</div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-400 text-sm mb-2">Package Type</label>
-                            <div className="flex bg-black/30 p-1 rounded-xl">
-                                {['session', 'weekly', 'monthly'].map(type => (
-                                    <button
-                                        key={type}
-                                        onClick={() => setSessionConfig(prev => ({ ...prev, packageType: type }))}
-                                        className={`flex-1 py-2 rounded-lg text-sm font-bold capitalize transition-all ${sessionConfig.packageType === type
-                                            ? 'bg-blue-600 text-white'
-                                            : 'text-gray-400 hover:text-white'}`}
-                                    >
-                                        {type}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-400 text-sm mb-2">
-                                {sessionConfig.packageType === 'session' ? 'Number of Sessions' : 'Duration (Weeks/Months)'}
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={sessionConfig.count}
-                                onChange={(e) => setSessionConfig(prev => ({ ...prev, count: parseInt(e.target.value) || 0 }))}
-                                className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
-                            />
-                        </div>
-
-                        {ptSettings.manualDiscountAllowed && (
-                            <div>
-                                <label className="block text-gray-400 text-sm mb-2">Custom Discount ($)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={sessionConfig.manualDiscount}
-                                    onChange={(e) => setSessionConfig(prev => ({ ...prev, manualDiscount: parseFloat(e.target.value) || 0 }))}
-                                    className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-gym-neon outline-none"
-                                />
-                            </div>
-                        )}
-
-                        <div className="pt-6 border-t border-white/10">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-gray-400">Rate per session</span>
-                                <span className="text-white font-mono">${ptSettings.rates[sessionConfig.trainerLevel]}</span>
-                            </div>
-                            <div className="flex justify-between items-end">
-                                <span className="text-xl font-bold text-white">Total Amount</span>
-                                <span className="text-4xl font-bold text-gym-neon">${calculateTotal()}</span>
-                            </div>
-                        </div>
-
-                        <button className="w-full bg-gym-neon text-black py-4 rounded-xl font-bold text-lg hover:bg-[#2ecc11] transition-colors shadow-[0_0_20px_rgba(57,255,20,0.3)]">
-                            Generate Invoice
-                        </button>
+                        ))}
                     </div>
                 </div>
 
-                {/* Info / Packages */}
-                <div className="space-y-6">
-                    <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5">
-                        <h3 className="text-xl font-bold text-white mb-4">Trainer Tiers</h3>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center text-xl">🥉</div>
-                                <div>
-                                    <h4 className="font-bold text-white">Beginner</h4>
-                                    <p className="text-sm text-gray-400">1-2 years experience. Focusing on form and consistency.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                                <div className="w-12 h-12 rounded-full bg-blue-900/50 flex items-center justify-center text-xl">🥈</div>
-                                <div>
-                                    <h4 className="font-bold text-white">Certified</h4>
-                                    <p className="text-sm text-gray-400">+3 years experience. Specialized knowledge in hypertrophy/strength.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4 p-4 bg-glare mb-2 border border-gym-neon/30 rounded-xl bg-gym-neon/5">
-                                <div className="w-12 h-12 rounded-full bg-gym-neon/20 flex items-center justify-center text-xl">🥇</div>
-                                <div>
-                                    <h4 className="font-bold text-white">Elite</h4>
-                                    <p className="text-sm text-gray-400">Top tier coaches. Competition prep and advanced programming.</p>
-                                </div>
-                            </div>
-                        </div>
+                {/* 2. Assign to Members */}
+                <div className="lg:col-span-2 bg-gym-card backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="p-6 border-b border-white/5">
+                        <h3 className="text-xl font-bold text-white">2. Assign to Members</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="border-b border-white/5 text-gray-400 text-sm">
+                                    <th className="px-6 py-4 font-medium">Member</th>
+                                    <th className="px-6 py-4 font-medium">Current Plan</th>
+                                    <th className="px-6 py-4 font-medium">Start Date</th>
+                                    <th className="px-6 py-4 font-medium text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {members.map((member) => {
+                                    const sub = ptSubscriptions[member.id];
+                                    return (
+                                        <tr key={member.id} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <span className="text-white font-medium">{member.name}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {sub ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Star size={14} className="text-gym-neon" />
+                                                        <span className="text-white capitalize">{durations.find(d => d.id === sub.duration)?.name || sub.duration}</span>
+                                                    </div>
+                                                ) : <span className="text-gray-500 text-sm italic">None</span>}
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-400 text-sm">
+                                                {sub ? sub.startDate : '-'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {sub ? (
+                                                    <button
+                                                        onClick={() => setPtSubscriptions(prev => {
+                                                            const next = { ...prev };
+                                                            delete next[member.id];
+                                                            return next;
+                                                        })}
+                                                        className="text-red-400 hover:text-red-300 text-xs font-bold"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleSubscribe(member.id)}
+                                                        className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                                    >
+                                                        Assign {durations.find(d => d.id === selectedDuration)?.name}
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

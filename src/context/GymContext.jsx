@@ -12,27 +12,34 @@ export const GymProvider = ({ children }) => {
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Core Settings
+    const [baseGymFee, setBaseGymFee] = useState(3000); // Base Monthly Membership (PKR)
+
     // New System Settings (Mock Database)
-    const [creatineSettings, setCreatineSettings] = useState({
-        pricePerGram: 1.5, // $ per gram
-        isAuto: true
+    const [supplementSettings, setSupplementSettings] = useState({
+        creatine: { price: 100, isAuto: true },
+        whey: { price: 300, isAuto: true },
+        preworkout: { price: 200, isAuto: true }
     });
 
     const [cardioSettings, setCardioSettings] = useState({
-        weeklyPrice: 15,
-        monthlyPrice: 50,
+        weeklyPrice: 1000,
+        monthlyPrice: 3000,
         unlimitedMultiplier: 1.5, // 50% extra for unlimited
         manualOverride: false
     });
 
     const [ptSettings, setPtSettings] = useState({
         rates: {
-            beginner: 30, // per session
-            certified: 50,
-            elite: 80
-        },
-        manualDiscountAllowed: true
+            one_month: 20000,
+            six_months: 100000,
+            one_year: 180000
+        }
     });
+
+    // Subscriptions State (Mock Database)
+    const [cardioSubscriptions, setCardioSubscriptions] = useState({});
+    const [ptSubscriptions, setPtSubscriptions] = useState({});
 
     useEffect(() => {
         // Check active session
@@ -51,8 +58,40 @@ export const GymProvider = ({ children }) => {
     const fetchData = async () => {
         if (!user) return;
 
-        const { data: membersData } = await supabase.from('members').select('*');
-        if (membersData) setMembers(membersData);
+        let { data: membersData } = await supabase.from('members').select('*');
+
+        if (membersData) {
+            // Check for monthly reset
+            const currentMonth = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+            const lastReset = localStorage.getItem('gym_last_reset');
+
+            if (lastReset !== currentMonth) {
+                console.log("New month detected. Resetting payment status...");
+
+                // Reset all 'Paid' members to 'Unpaid'
+                const updates = membersData.map(async (member) => {
+                    if (member.payment === 'Paid') {
+                        const { error } = await supabase
+                            .from('members')
+                            .update({ payment: 'Unpaid' })
+                            .eq('id', member.id);
+
+                        if (!error) {
+                            return { ...member, payment: 'Unpaid' };
+                        }
+                    }
+                    return member;
+                });
+
+                // Wait for all updates to complete
+                membersData = await Promise.all(updates);
+
+                // Update local storage
+                localStorage.setItem('gym_last_reset', currentMonth);
+            }
+
+            setMembers(membersData);
+        }
 
         const { data: classesData } = await supabase.from('classes').select('*');
         if (classesData) setClasses(classesData);
@@ -91,11 +130,13 @@ export const GymProvider = ({ children }) => {
     };
 
     const updateMember = async (id, updates) => {
+        // Optimistic update for UI responsiveness
+        setMembers(members.map(m => m.id === id ? { ...m, ...updates } : m));
+
         const { error } = await supabase.from('members').update(updates).eq('id', id);
-        if (!error) {
-            setMembers(members.map(m => m.id === id ? { ...m, ...updates } : m));
-        } else {
+        if (error) {
             console.error("Error updating member:", error);
+            // Optionally revert here if strictly needed, but for 'extra' fields not in DB, we keep them locally
         }
     };
 
@@ -192,9 +233,12 @@ export const GymProvider = ({ children }) => {
             logout,
             addClass,
             removeClass,
-            creatineSettings, setCreatineSettings,
+            baseGymFee, setBaseGymFee,
+            supplementSettings, setSupplementSettings,
             cardioSettings, setCardioSettings,
-            ptSettings, setPtSettings
+            ptSettings, setPtSettings,
+            cardioSubscriptions, setCardioSubscriptions,
+            ptSubscriptions, setPtSubscriptions
         }}>
             {children}
         </GymContext.Provider>

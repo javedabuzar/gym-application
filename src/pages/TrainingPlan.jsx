@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { FileText, Activity, Download, Printer, Edit2, RotateCw } from 'lucide-react';
+import { FileText, Activity, Download, Printer, Edit2, RotateCw, Image as ImageIcon } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const TrainingPlan = () => {
     // User Inputs
@@ -65,6 +66,13 @@ const TrainingPlan = () => {
         setIsEditing(false);
     };
 
+    const createManualPlan = () => {
+        setGeneratedPlan({
+            Monday: '', Tuesday: '', Wednesday: '', Thursday: '', Friday: '', Saturday: '', Sunday: ''
+        });
+        setIsEditing(true);
+    };
+
     const handlePlanEdit = (day, value) => {
         setGeneratedPlan(prev => ({
             ...prev,
@@ -104,6 +112,28 @@ const TrainingPlan = () => {
         });
 
         doc.save(`${formData.name || 'Member'}_Training_Plan.pdf`);
+    };
+
+    const planRef = React.useRef(null);
+
+    const downloadImage = async () => {
+        if (!planRef.current) return;
+
+        try {
+            const canvas = await html2canvas(planRef.current, {
+                scale: 2,
+                backgroundColor: '#1E1E1E' // Dark background for the image
+            });
+
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = `${formData.name || 'Member'}_Training_Plan.png`;
+            link.click();
+        } catch (error) {
+            console.error("Error generating image:", error);
+            alert("Failed to download image.");
+        }
     };
 
     return (
@@ -199,13 +229,20 @@ const TrainingPlan = () => {
                             <RotateCw size={20} />
                             Generate Plan
                         </button>
+                        <button
+                            onClick={createManualPlan}
+                            className="w-full mt-3 bg-white/5 text-white py-3 rounded-xl font-bold hover:bg-white/10 transition-colors flex items-center justify-center gap-2 border border-white/10"
+                        >
+                            <Edit2 size={20} />
+                            Create Manual Plan
+                        </button>
                     </div>
                 </div>
 
                 {/* Plan Display */}
                 <div className="lg:col-span-2 space-y-4">
                     {generatedPlan ? (
-                        <div className="bg-gym-card backdrop-blur-xl p-8 rounded-2xl border border-white/5 animate-fadeIn">
+                        <div ref={planRef} className="bg-gym-card backdrop-blur-xl p-8 rounded-2xl border border-white/5 animate-fadeIn">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-2xl font-bold text-white">{formData.goal} Plan</h3>
                                 <div className="flex gap-2">
@@ -220,6 +257,12 @@ const TrainingPlan = () => {
                                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors"
                                     >
                                         <Download size={20} /> PDF
+                                    </button>
+                                    <button
+                                        onClick={downloadImage}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors"
+                                    >
+                                        <ImageIcon size={20} /> Image
                                     </button>
                                 </div>
                             </div>
@@ -252,7 +295,7 @@ const TrainingPlan = () => {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
