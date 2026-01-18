@@ -108,6 +108,47 @@ export const GymProvider = ({ children }) => {
             });
             setAttendance(attendanceMap);
         }
+
+        // --- NEW: Load Settings from Supabase ---
+        const { data: settingsData } = await supabase.from('gym_settings').select('*');
+        if (settingsData) {
+            settingsData.forEach(setting => {
+                if (setting.category === 'supplement') setSupplementSettings(setting.settings);
+                if (setting.category === 'cardio') setCardioSettings(setting.settings);
+                if (setting.category === 'pt') setPtSettings(setting.settings);
+            });
+        }
+
+        // --- NEW: Load Cardio Subscriptions ---
+        const { data: cardioData } = await supabase.from('cardio_subscriptions').select('*').eq('status', 'Active');
+        if (cardioData) {
+            const cardioMap = {};
+            cardioData.forEach(sub => {
+                cardioMap[sub.member_id] = {
+                    duration: sub.duration,
+                    type: sub.type,
+                    price: sub.price,
+                    active: sub.status === 'Active',
+                    startDate: sub.start_date
+                };
+            });
+            setCardioSubscriptions(cardioMap);
+        }
+
+        // --- NEW: Load PT Subscriptions ---
+        const { data: ptData } = await supabase.from('training_plans').select('*').eq('status', 'Active');
+        if (ptData) {
+            const ptMap = {};
+            ptData.forEach(plan => {
+                ptMap[plan.member_id] = {
+                    duration: plan.plan_type,
+                    price: plan.price,
+                    active: plan.status === 'Active',
+                    startDate: new Date(plan.start_date || plan.created_at).toLocaleDateString()
+                };
+            });
+            setPtSubscriptions(ptMap);
+        }
     };
 
     useEffect(() => {
@@ -217,6 +258,66 @@ export const GymProvider = ({ children }) => {
         }
     };
 
+    // --- Persistence Helpers ---
+
+    const saveSettings = async (category, newSettings) => {
+        // Optimistic Update
+        if (category === 'supplement') setSupplementSettings(newSettings);
+        if (category === 'cardio') setCardioSettings(newSettings);
+        if (category === 'pt') setPtSettings(newSettings);
+
+        // Save to Supabase
+        const { error } = await supabase.from('gym_settings').upsert(
+            { category, settings: newSettings },
+            { onConflict: 'category' }
+        );
+
+        if (error) {
+            console.error(`Error saving ${category} settings:`, error);
+        }
+    };
+
+    const assignCardioPlan = async (memberId, plan) => {
+        // Optimistic Update
+        setCardioSubscriptions(prev => ({
+            ...prev,
+            [memberId]: plan
+        }));
+
+        // Save to Supabase
+        const { error } = await supabase.from('cardio_subscriptions').insert({
+            member_id: memberId,
+            duration: plan.duration,
+            type: plan.type,
+            price: plan.price,
+            start_date: new Date().toISOString(),
+            status: 'Active'
+        });
+
+        if (error) console.error("Error assigning cardio plan:", error);
+    };
+
+    const assignPtPlan = async (memberId, plan) => {
+        // Optimistic Update
+        setPtSubscriptions(prev => ({
+            ...prev,
+            [memberId]: plan
+        }));
+
+        // Save to Supabase (training_plans table)
+        const { error } = await supabase.from('training_plans').insert({
+            member_id: memberId,
+            plan_name: 'Personal Training',
+            plan_type: plan.duration,
+            trainer_name: 'Assigned Trainer', // Default or pass in
+            price: plan.price,
+            start_date: new Date().toISOString(),
+            status: 'Active'
+        });
+
+        if (error) console.error("Error assigning PT plan:", error);
+    };
+
     return (
         <GymContext.Provider value={{
             members,
@@ -234,11 +335,18 @@ export const GymProvider = ({ children }) => {
             addClass,
             removeClass,
             baseGymFee, setBaseGymFee,
-            supplementSettings, setSupplementSettings,
-            cardioSettings, setCardioSettings,
-            ptSettings, setPtSettings,
-            cardioSubscriptions, setCardioSubscriptions,
-            ptSubscriptions, setPtSubscriptions
+            supplementSettings,
+            setSupplementSettings: (val) => saveSettings('supplement', val),
+            cardioSettings,
+            setCardioSettings: (val) => saveSettings('cardio', val),
+            ptSettings,
+            setPtSettings: (val) => saveSettings('pt', val),
+            cardioSubscriptions,
+            setCardioSubscriptions, // Keep original for now or remove if unused externally
+            assignCardioPlan, // NEW exposed function
+            ptSubscriptions,
+            setPtSubscriptions, // Keep original for now
+            assignPtPlan // NEW exposed function
         }}>
             {children}
         </GymContext.Provider>

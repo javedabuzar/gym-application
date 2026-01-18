@@ -1,61 +1,188 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGym } from '../context/GymContext';
-import { Dumbbell, Settings, UserCheck, Star, Trophy, Users, Save } from 'lucide-react';
+import { Dumbbell, Settings, UserCheck, Star, Trophy, Users, Save, Plus, X, Calendar, DollarSign, Clock, Target } from 'lucide-react';
 
 const PersonalTraining = () => {
     const { members, ptSettings, setPtSettings, ptSubscriptions, setPtSubscriptions } = useGym();
+    
     const [showSettings, setShowSettings] = useState(false);
-
-    // Simple state for user selection
+    const [showAddPlan, setShowAddPlan] = useState(false);
+    const [selectedMember, setSelectedMember] = useState(null);
     const [selectedDuration, setSelectedDuration] = useState('one_month');
+    
+    // Local settings state
+    const [localSettings, setLocalSettings] = useState({
+        one_month: ptSettings?.rates?.one_month || 20000,
+        six_months: ptSettings?.rates?.six_months || 100000,
+        one_year: ptSettings?.rates?.one_year || 180000
+    });
 
-    // Local state for settings
-    const [localSettings, setLocalSettings] = useState({ ...ptSettings.rates });
+    // New plan state
+    const [newPlan, setNewPlan] = useState({
+        duration: 'one_month',
+        trainer: '',
+        goals: [],
+        customPrice: null,
+        notes: ''
+    });
 
-    React.useEffect(() => {
-        setLocalSettings(ptSettings.rates);
+    useEffect(() => {
+        if (ptSettings?.rates) {
+            setLocalSettings({
+                one_month: ptSettings.rates.one_month || 20000,
+                six_months: ptSettings.rates.six_months || 100000,
+                one_year: ptSettings.rates.one_year || 180000
+            });
+        }
     }, [ptSettings]);
 
     const handleSaveSettings = () => {
-        setPtSettings(prev => ({ ...prev, rates: localSettings }));
-        alert("Settings Saved Successfully!");
+        setPtSettings({
+            rates: localSettings
+        });
         setShowSettings(false);
     };
 
     const handleSubscribe = (memberId) => {
+        const price = newPlan.customPrice || localSettings[newPlan.duration];
+        const startDate = new Date();
+        const endDate = new Date();
+        
+        // Calculate end date based on duration
+        switch (newPlan.duration) {
+            case 'one_month':
+                endDate.setMonth(startDate.getMonth() + 1);
+                break;
+            case 'six_months':
+                endDate.setMonth(startDate.getMonth() + 6);
+                break;
+            case 'one_year':
+                endDate.setFullYear(startDate.getFullYear() + 1);
+                break;
+        }
+
+        const plan = {
+            id: Date.now(),
+            memberId: memberId,
+            duration: newPlan.duration,
+            trainer: newPlan.trainer,
+            goals: newPlan.goals,
+            price: price,
+            startDate: startDate.toLocaleDateString(),
+            endDate: endDate.toLocaleDateString(),
+            notes: newPlan.notes,
+            sessionsCompleted: 0,
+            totalSessions: getTotalSessions(newPlan.duration),
+            active: true,
+            createdAt: new Date().toISOString()
+        };
+
         setPtSubscriptions(prev => ({
             ...prev,
-            [memberId]: {
-                duration: selectedDuration,
-                price: ptSettings.rates[selectedDuration],
-                active: true,
-                startDate: new Date().toLocaleDateString()
-            }
+            [memberId]: plan
         }));
+
+        setShowAddPlan(false);
+        setSelectedMember(null);
+        setNewPlan({
+            duration: 'one_month',
+            trainer: '',
+            goals: [],
+            customPrice: null,
+            notes: ''
+        });
     };
 
+    const getTotalSessions = (duration) => {
+        switch (duration) {
+            case 'one_month': return 12; // 3 sessions per week
+            case 'six_months': return 72; // 3 sessions per week
+            case 'one_year': return 144; // 3 sessions per week
+            default: return 12;
+        }
+    };
+
+    const handleRemoveSubscription = (memberId) => {
+        setPtSubscriptions(prev => {
+            const updated = { ...prev };
+            delete updated[memberId];
+            return updated;
+        });
+    };
+
+    const openAddPlan = (member) => {
+        setSelectedMember(member);
+        setShowAddPlan(true);
+    };
+
+    const availableTrainers = [
+        'Ali Hassan - Weight Training',
+        'Sara Ahmed - Yoga & Flexibility',
+        'Hassan Raza - CrossFit & HIIT',
+        'Fatima Khan - Dance Fitness',
+        'Usman Tariq - Boxing & Martial Arts'
+    ];
+
+    const fitnessGoals = [
+        'Weight Loss',
+        'Muscle Gain',
+        'Strength Training',
+        'Endurance',
+        'Flexibility',
+        'Competition Prep',
+        'General Fitness',
+        'Rehabilitation'
+    ];
+
     const durations = [
-        { id: 'one_month', name: '1 Month', icon: UserCheck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-        { id: 'six_months', name: '6 Months', icon: Star, color: 'text-gym-neon', bg: 'bg-gym-neon/10' },
-        { id: 'one_year', name: '1 Year', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-400/10' }
+        { 
+            id: 'one_month', 
+            name: '1 Month', 
+            icon: UserCheck, 
+            color: 'text-blue-400', 
+            bg: 'bg-blue-400/10',
+            sessions: 12,
+            description: '3 sessions per week'
+        },
+        { 
+            id: 'six_months', 
+            name: '6 Months', 
+            icon: Star, 
+            color: 'text-gym-neon', 
+            bg: 'bg-gym-neon/10',
+            sessions: 72,
+            description: '3 sessions per week'
+        },
+        { 
+            id: 'one_year', 
+            name: '1 Year', 
+            icon: Trophy, 
+            color: 'text-yellow-400', 
+            bg: 'bg-yellow-400/10',
+            sessions: 144,
+            description: '3 sessions per week'
+        }
     ];
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-3xl font-bold text-white flex items-center gap-3">
                         <Dumbbell className="text-gym-neon" size={32} />
                         Personal Training
                     </h2>
-                    <p className="text-gray-400 mt-1">Duration-based Personal Training Subscriptions</p>
+                    <p className="text-gray-400 mt-1">Professional one-on-one training programs</p>
                 </div>
                 <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className="bg-white/5 hover:bg-white/10 text-white p-3 rounded-xl transition-all border border-white/10"
+                    className={`px-4 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-2 ${
+                        showSettings ? 'bg-gym-neon text-black' : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
                 >
                     <Settings size={20} />
+                    Admin Settings
                 </button>
             </div>
 
