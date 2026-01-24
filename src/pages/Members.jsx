@@ -6,10 +6,10 @@ import { QRCodeCanvas } from 'qrcode.react';
 
 const Members = () => {
     try {
-        const { members, addMember, removeMember, markAttendance, updateMember } = useGym();
-        
+        const { members, addMember, removeMember, markAttendance, unmarkAttendance, updateMember, getMemberAttendance } = useGym();
+
         console.log('✅ Members component loaded!', { members });
-        
+
         const [searchTerm, setSearchTerm] = useState('');
         const [showAddForm, setShowAddForm] = useState(false);
         const [isEditing, setIsEditing] = useState(false);
@@ -50,8 +50,19 @@ const Members = () => {
         };
 
         const handleMarkAttendance = async (id) => {
-            const result = await markAttendance(id);
-            alert(result.message);
+            const today = new Date().toDateString();
+            const attendance = getMemberAttendance(id);
+            const isPresent = attendance.includes(today);
+
+            if (isPresent) {
+                if (window.confirm("Unmark attendance for today?")) {
+                    const result = await unmarkAttendance(id);
+                    alert(result.message);
+                }
+            } else {
+                const result = await markAttendance(id);
+                alert(result.message);
+            }
         };
 
         const exportCSV = () => {
@@ -278,24 +289,14 @@ const Members = () => {
                                             </td>
                                             <td className="px-6 py-4 text-white">Rs. {member.fee}</td>
                                             <td className="px-6 py-4">
-                                                <select
-                                                    value={member.payment}
-                                                    onChange={(e) => updateMember(member.id, { payment: e.target.value })}
-                                                    className={`bg-transparent border-none focus:ring-0 text-sm font-medium ${member.payment === 'Paid' ? 'text-green-400' : 'text-red-400'}`}
-                                                >
-                                                    <option value="Paid" className="bg-gray-800">Paid</option>
-                                                    <option value="Unpaid" className="bg-gray-800">Unpaid</option>
-                                                </select>
+                                                <span className={`font-medium ${member.payment === 'Paid' ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {member.payment}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <select
-                                                    value={member.status}
-                                                    onChange={(e) => updateMember(member.id, { status: e.target.value })}
-                                                    className={`bg-transparent border-none focus:ring-0 text-sm font-medium ${member.status === 'Active' ? 'text-gym-neon' : 'text-gray-400'}`}
-                                                >
-                                                    <option value="Active" className="bg-gray-800">Active</option>
-                                                    <option value="Inactive" className="bg-gray-800">Inactive</option>
-                                                </select>
+                                                <span className={`font-medium ${member.status === 'Active' ? 'text-gym-neon' : 'text-gray-400'}`}>
+                                                    {member.status}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 text-gray-400 text-sm">
                                                 {new Date(member.join_date || Date.now()).toLocaleDateString()}
@@ -307,8 +308,15 @@ const Members = () => {
                                                 <button onClick={() => setSelectedMemberQR(member)} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Show QR">
                                                     <QrCode size={20} />
                                                 </button>
-                                                <button onClick={() => handleMarkAttendance(member.id)} className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Mark Attendance">
-                                                    <CheckCircle size={20} />
+                                                <button
+                                                    onClick={() => handleMarkAttendance(member.id)}
+                                                    className={`p-2 rounded-lg transition-colors ${getMemberAttendance(member.id).includes(new Date().toDateString())
+                                                        ? 'text-green-500 bg-green-500/10 hover:bg-green-500/20'
+                                                        : 'text-gray-400 hover:text-green-400 hover:bg-green-500/10'
+                                                        }`}
+                                                    title={getMemberAttendance(member.id).includes(new Date().toDateString()) ? "Unmark Attendance" : "Mark Attendance"}
+                                                >
+                                                    {getMemberAttendance(member.id).includes(new Date().toDateString()) ? <CheckCircle size={20} fill="currentColor" className="text-green-500" /> : <CheckCircle size={20} />}
                                                 </button>
                                                 <button onClick={() => removeMember(member.id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Remove Member">
                                                     <Trash2 size={20} />
@@ -364,8 +372,8 @@ const Members = () => {
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-red-400 mb-4">Error Loading Members</h2>
                     <p className="text-gray-400 mb-4">{error.message}</p>
-                    <button 
-                        onClick={() => window.location.reload()} 
+                    <button
+                        onClick={() => window.location.reload()}
                         className="bg-gym-neon text-black px-6 py-2 rounded-xl font-bold"
                     >
                         Reload Page

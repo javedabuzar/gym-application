@@ -13,6 +13,8 @@ import Cardio from './pages/Cardio';
 import PersonalTraining from './pages/PersonalTraining';
 import TrainingPlan from './pages/TrainingPlan';
 import Invoice from './pages/Invoice';
+import MemberStatus from './pages/MemberStatus';
+import PaymentStatus from './pages/PaymentStatus';
 import { useGym } from './context/GymContext';
 
 const ProtectedRoute = ({ children }) => {
@@ -38,6 +40,8 @@ function App() {
                     <Route path="training" element={<PersonalTraining />} />
                     <Route path="plans" element={<TrainingPlan />} />
                     <Route path="invoice" element={<Invoice />} />
+                    <Route path="status" element={<MemberStatus />} />
+                    <Route path="payment" element={<PaymentStatus />} />
                 </Route>
             </Routes>
         </BrowserRouter>

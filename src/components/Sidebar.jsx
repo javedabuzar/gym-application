@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, Calendar, Settings, LogOut, FileText, QrCode, FlaskConical, Bike, Dumbbell, Notebook } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Settings, LogOut, FileText, QrCode, FlaskConical, Bike, Dumbbell, Notebook, Activity, CreditCard } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useGym } from '../context/GymContext';
 
@@ -18,6 +18,8 @@ const Sidebar = () => {
         { icon: Bike, label: 'Cardio', path: '/cardio' },
         { icon: Dumbbell, label: 'Training', path: '/training' },
         { icon: Notebook, label: 'Plans', path: '/plans' },
+        { icon: Activity, label: 'Member Status', path: '/status' },
+        { icon: CreditCard, label: 'Payments', path: '/payment' },
         { icon: FileText, label: 'Slip / Invoice', path: '/invoice' },
     ];
 

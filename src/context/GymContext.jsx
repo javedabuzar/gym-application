@@ -218,6 +218,31 @@ export const GymProvider = ({ children }) => {
         }
     };
 
+    const unmarkAttendance = async (id) => {
+        const today = new Date().toDateString();
+        const memberAttendance = attendance[id] || [];
+
+        if (!memberAttendance.includes(today)) {
+            return { success: false, message: 'Not marked for today' };
+        }
+
+        const { error } = await supabase.from('attendance')
+            .delete()
+            .eq('member_id', id)
+            .eq('date', today);
+
+        if (!error) {
+            setAttendance({
+                ...attendance,
+                [id]: memberAttendance.filter(date => date !== today)
+            });
+            return { success: true, message: 'Attendance unmarked!' };
+        } else {
+            console.error("Error unmarking attendance:", error);
+            return { success: false, message: 'Error unmarking attendance' };
+        }
+    };
+
     const getMemberAttendance = (id) => {
         return attendance[id] || [];
     };
@@ -326,6 +351,7 @@ export const GymProvider = ({ children }) => {
             updateMember,
             removeMember,
             markAttendance,
+            unmarkAttendance, // NEW
             getMemberAttendance,
             user,
             loading,
