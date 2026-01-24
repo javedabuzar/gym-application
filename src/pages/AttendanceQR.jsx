@@ -193,15 +193,31 @@ const AttendanceQR = () => {
                     {/* Manual Entry & Results */}
                     <div className="space-y-6">
                         {/* Result Card */}
-                        <div className={`bg-gym-card backdrop-blur-xl p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center h-64 transition-all ${scanResult ? (scanResult.success ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5') : ''
+                        <div className={`bg-gym-card backdrop-blur-xl p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center h-64 transition-all ${scanResult
+                                ? (scanResult.success
+                                    ? 'border-green-500/30 bg-green-500/5'
+                                    : scanResult.message.includes('Already marked')
+                                        ? 'border-yellow-500/30 bg-yellow-500/5'
+                                        : 'border-red-500/30 bg-red-500/5')
+                                : ''
                             }`}>
                             {scanResult ? (
                                 <div className="animate-fadeIn">
-                                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto ${scanResult.success ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                                        {scanResult.success ? <CheckCircle size={40} /> : <XCircle size={40} />}
+                                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto ${scanResult.success
+                                        ? 'bg-green-500/10 text-green-500'
+                                        : scanResult.message.includes('Already marked')
+                                            ? 'bg-yellow-500/10 text-yellow-500'
+                                            : 'bg-red-500/10 text-red-500'
+                                        }`}>
+                                        {scanResult.success ? <CheckCircle size={40} /> : scanResult.message.includes('Already marked') ? <CheckCircle size={40} /> : <XCircle size={40} />}
                                     </div>
-                                    <h3 className={`text-2xl font-bold mb-2 ${scanResult.success ? 'text-green-500' : 'text-red-500'}`}>
-                                        {scanResult.success ? 'Passed!' : 'Failed'}
+                                    <h3 className={`text-2xl font-bold mb-2 ${scanResult.success
+                                        ? 'text-green-500'
+                                        : scanResult.message.includes('Already marked')
+                                            ? 'text-yellow-500'
+                                            : 'text-red-500'
+                                        }`}>
+                                        {scanResult.success ? 'Passed!' : scanResult.message.includes('Already marked') ? 'Already Present' : 'Failed'}
                                     </h3>
                                     <p className="text-white text-lg font-medium">{scanResult.memberName}</p>
                                     <p className="text-gray-400">{scanResult.message}</p>

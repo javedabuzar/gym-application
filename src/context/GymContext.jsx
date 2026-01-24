@@ -195,7 +195,7 @@ export const GymProvider = ({ children }) => {
     };
 
     const markAttendance = async (id) => {
-        const today = new Date().toDateString();
+        const today = new Date().toISOString().split('T')[0];
         const memberAttendance = attendance[id] || [];
 
         if (memberAttendance.includes(today)) {
@@ -219,7 +219,7 @@ export const GymProvider = ({ children }) => {
     };
 
     const unmarkAttendance = async (id) => {
-        const today = new Date().toDateString();
+        const today = new Date().toISOString().split('T')[0];
         const memberAttendance = attendance[id] || [];
 
         if (!memberAttendance.includes(today)) {
