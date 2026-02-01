@@ -141,10 +141,10 @@ const AttendanceQR = () => {
                     <h2 className="text-3xl font-bold text-white">Attendance & Cards</h2>
                     <p className="text-gray-400 mt-1">Scan for attendance or issue member cards</p>
                 </div>
-                <div className="flex bg-white/5 p-1 rounded-xl">
+                <div className="flex bg-black/60 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-lg">
                     <button
                         onClick={() => setActiveTab('scan')}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'scan' ? 'bg-gym-neon text-black font-bold' : 'text-gray-400 hover:text-white'
+                        className={`px-6 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'scan' ? 'bg-gym-neon text-black font-bold shadow-[0_0_10px_rgba(57,255,20,0.4)]' : 'text-gray-300 hover:text-white hover:bg-white/10'
                             }`}
                     >
                         <Camera size={20} />
@@ -152,7 +152,7 @@ const AttendanceQR = () => {
                     </button>
                     <button
                         onClick={() => setActiveTab('card')}
-                        className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'card' ? 'bg-gym-neon text-black font-bold' : 'text-gray-400 hover:text-white'
+                        className={`px-6 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'card' ? 'bg-gym-neon text-black font-bold shadow-[0_0_10px_rgba(57,255,20,0.4)]' : 'text-gray-300 hover:text-white hover:bg-white/10'
                             }`}
                     >
                         <Users size={20} />
@@ -194,12 +194,12 @@ const AttendanceQR = () => {
                     <div className="space-y-6">
                         {/* Result Card */}
                         <div className={`bg-gym-card backdrop-blur-xl p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center h-64 transition-all ${scanResult
-                                ? (scanResult.success
-                                    ? 'border-green-500/30 bg-green-500/5'
-                                    : scanResult.message.includes('Already marked')
-                                        ? 'border-yellow-500/30 bg-yellow-500/5'
-                                        : 'border-red-500/30 bg-red-500/5')
-                                : ''
+                            ? (scanResult.success
+                                ? 'border-green-500/30 bg-green-500/5'
+                                : scanResult.message.includes('Already marked')
+                                    ? 'border-yellow-500/30 bg-yellow-500/5'
+                                    : 'border-red-500/30 bg-red-500/5')
+                            : ''
                             }`}>
                             {scanResult ? (
                                 <div className="animate-fadeIn">
@@ -258,7 +258,7 @@ const AttendanceQR = () => {
                         <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5">
                             <label className="block text-gray-400 mb-2">Select Member</label>
                             <select
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-gym-neon mb-4"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-gym-neon mb-4 [&>option]:bg-gray-900 [&>option]:text-white"
                                 onChange={(e) => setSelectedMember(members.find(m => m.id === Number(e.target.value)))}
                                 value={selectedMember?.id || ''}
                             >
@@ -303,46 +303,68 @@ const AttendanceQR = () => {
                             <div className="print-area">
                                 <div
                                     ref={cardRef}
-                                    className="w-[400px] h-[250px] bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gym-neon/30 relative overflow-hidden shadow-2xl flex"
+                                    className="w-[600px] h-[350px] bg-[#1a1a1a] rounded-3xl border-4 border-[#39ff14] relative overflow-hidden flex shadow-2xl"
                                 >
-                                    {/* Background Accents */}
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-gym-neon/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-
-                                    {/* Left Side: Info */}
-                                    <div className="w-2/3 p-6 flex flex-col justify-between z-10">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <div className="w-2 h-8 bg-gym-neon rounded-full"></div>
-                                                <h1 className="text-xl font-bold text-white tracking-wider">GYM CARD</h1>
-                                            </div>
-                                            <p className="text-xs text-gym-neon uppercase tracking-widest ml-4">Access Pass</p>
+                                    {/* Left Side: Image/Bodybuilder Placeholder */}
+                                    <div className="w-[45%] h-full relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-[#1a1a1a] z-10"></div>
+                                        {/* Use a placeholder image or gradient if no user image */}
+                                        <div className="w-full h-full bg-gray-800 relative">
+                                            <img
+                                                src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=2070&auto=format&fit=crop"
+                                                alt="Gym Member"
+                                                className="w-full h-full object-cover opacity-80"
+                                            />
                                         </div>
-
-                                        <div>
-                                            <p className="text-xs text-gray-400 uppercase mb-1">Member Name</p>
-                                            <h2 className="text-2xl font-bold text-white truncate">{selectedMember.name}</h2>
-                                            <div className="flex gap-4 mt-3">
-                                                <div>
-                                                    <p className="text-[10px] text-gray-500 uppercase">ID No.</p>
-                                                    <p className="text-lg font-mono text-white">{String(selectedMember.id).padStart(4, '0')}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-gray-500 uppercase">Joined</p>
-                                                    <p className="text-sm text-white mt-1">{new Date(selectedMember.join_date).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {/* Green diagonal slice shape */}
+                                        <div className="absolute top-0 right-0 h-full w-14 bg-[#39ff14] skew-x-[-15deg] translate-x-1/2 z-20 shadow-[0_0_20px_rgba(57,255,20,0.5)]"></div>
                                     </div>
 
-                                    {/* Right Side: QR */}
-                                    <div className="w-1/3 bg-white/5 backdrop-blur-sm flex items-center justify-center border-l border-white/5 z-10">
-                                        <div className="bg-white p-2 rounded-xl">
-                                            <QRCodeCanvas
-                                                value={String(selectedMember.id)}
-                                                size={100}
-                                                level={"H"}
-                                            />
+                                    {/* Right Side: Content */}
+                                    <div className="w-[55%] h-full p-6 flex flex-col justify-between relative z-30 bg-[#1a1a1a]">
+                                        <div className="text-right">
+                                            <div className="flex items-center justify-end gap-2 mb-1">
+                                                <div className="text-[#39ff14]">
+                                                    {/* Dumbbell Icon SVG */}
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M6.5 6.5h11"></path>
+                                                        <path d="M6.5 17.5h11"></path>
+                                                        <path d="M6 20v-5"></path>
+                                                        <path d="M18 20v-5"></path>
+                                                        <path d="M6 9V4"></path>
+                                                        <path d="M18 9V4"></path>
+                                                    </svg>
+                                                </div>
+                                                <h1 className="text-2xl font-black text-white italic tracking-tighter">GYMPRO</h1>
+                                            </div>
+                                            <p className="text-xs text-white/60 tracking-widest uppercase">Shape your body</p>
+                                        </div>
+
+                                        <div className="bg-[#39ff14] text-black text-center py-1.5 font-bold text-sm -mx-6 my-2 shadow-lg relative">
+                                            <span className="relative z-10">GYM MEMBERSHIP CARD</span>
+                                            <div className="absolute right-full top-0 h-full w-4 bg-[#39ff14] skew-x-[-15deg]"></div>
+                                        </div>
+
+                                        <div className="flex flex-col items-center justify-center flex-1 my-2">
+                                            <div className="bg-white p-2 rounded-lg shadow-lg">
+                                                <QRCodeCanvas
+                                                    value={String(selectedMember.id)}
+                                                    size={100}
+                                                    level={"H"}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center space-y-1">
+                                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Member ID: <span className="text-white text-xs">GS-{String(selectedMember.id).padStart(4, '0')}</span></p>
+                                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Status: <span className="text-[#39ff14] text-xs">{selectedMember.status}</span></p>
+                                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Valid Until: <span className="text-white text-xs">02/27</span></p>
+                                            <div className="mt-2 pt-2 border-t border-white/10 w-full">
+                                                <p className="text-[9px] text-white/50 flex items-center justify-center gap-1">
+                                                    <span className="w-1 h-1 bg-[#39ff14] rounded-full"></span>
+                                                    +92 300 1234567
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

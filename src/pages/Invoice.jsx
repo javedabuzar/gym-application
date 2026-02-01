@@ -87,7 +87,7 @@ const Invoice = () => {
         try {
             const canvas = await html2canvas(invoiceRef.current, {
                 scale: 2, // Higher quality
-                backgroundColor: '#ffffff'
+                backgroundColor: '#0a0a0a' // Dark background for image
             });
 
             const image = canvas.toDataURL("image/png");
@@ -229,57 +229,133 @@ const Invoice = () => {
 
                 {/* Preview */}
                 <div className="lg:col-span-2">
-                    <div ref={invoiceRef} className="bg-white text-black p-8 rounded-2xl shadow-2xl min-h-[500px] flex flex-col relative">
+                    <div ref={invoiceRef} className="bg-black/80 backdrop-blur-2xl text-white p-10 rounded-sm shadow-2xl min-h-[700px] flex flex-col relative border border-white/10 overflow-hidden">
+                        {/* Abstract Background Shapes */}
+                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gym-neon/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
                         {member ? (
                             <>
-                                <div className="text-center border-b-2 border-black pb-4 mb-6">
-                                    <h1 className="text-3xl font-bold tracking-wider">GYM INVOICE</h1>
-                                    <p className="text-gray-600 uppercase tracking-widest text-sm mt-1">Official Monthly Slip</p>
-                                </div>
+                                <div className="relative z-10 flex flex-col h-full">
+                                    {/* Header */}
+                                    <div className="flex justify-between items-start mb-12 border-b border-white/10 pb-8">
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-10 h-10 bg-gym-neon rounded-lg flex items-center justify-center transform rotate-3 shadow-[0_0_15px_rgba(57,255,20,0.4)]">
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M6.5 6.5h11"></path>
+                                                        <path d="M6.5 17.5h11"></path>
+                                                        <path d="M6 20v-5"></path>
+                                                        <path d="M18 20v-5"></path>
+                                                        <path d="M6 9V4"></path>
+                                                        <path d="M18 9V4"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-2xl font-black italic tracking-tighter text-white leading-none">GYMPRO</h2>
+                                                    <p className="text-[10px] text-gym-neon tracking-[0.3em] uppercase">Shape Your Body</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <h1 className="text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">GYM FEE</h1>
+                                            <p className="text-sm text-gray-400 font-mono">#{String(Date.now()).slice(-8)}</p>
+                                        </div>
+                                    </div>
 
-                                <div className="flex justify-between mb-8">
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Billed To</p>
-                                        <h2 className="text-xl font-bold">{member.name}</h2>
-                                        <p className="text-gray-600">{member.status || 'Active Member'}</p>
+                                    {/* Client & Date Info */}
+                                    <div className="flex justify-between mb-12">
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase tracking-widest mb-2 font-bold">Billed To</p>
+                                            <h3 className="text-3xl font-bold text-white mb-1">{member.name}</h3>
+                                            <p className="text-gray-400 text-sm">Member ID: GS-{String(member.id).padStart(4, '0')}</p>
+                                            <p className="text-gym-neon text-sm mt-1 flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-gym-neon animate-pulse"></span>
+                                                {member.status || 'Active Member'}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="mb-4">
+                                                <p className="text-xs text-gray-500 uppercase tracking-widest mb-1 font-bold">Issue Date</p>
+                                                <p className="text-xl font-medium text-white">{new Date().toLocaleDateString()}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-500 uppercase tracking-widest mb-1 font-bold">Due Date</p>
+                                                <p className="text-xl font-medium text-white">{new Date().toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Date</p>
-                                        <p className="font-mono">{new Date().toLocaleDateString()}</p>
-                                    </div>
-                                </div>
 
-                                <table className="w-full mb-8">
-                                    <thead className="bg-gray-100">
-                                        <tr>
-                                            <th className="text-left py-2 px-4 font-bold uppercase text-xs text-gray-600">Description</th>
-                                            <th className="text-right py-2 px-4 font-bold uppercase text-xs text-gray-600">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {items.map((item, index) => (
-                                            <tr key={index}>
-                                                <td className="py-3 px-4 text-sm">{item.name}</td>
-                                                <td className="py-3 px-4 text-right font-mono">Rs. {item.price.toLocaleString()}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                    {/* Table */}
+                                    <div className="flex-1">
+                                        <div className="w-full">
+                                            <div className="grid grid-cols-12 gap-4 pb-4 border-b border-white/10 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                <div className="col-span-1 text-center">No.</div>
+                                                <div className="col-span-7">Description</div>
+                                                <div className="col-span-2 text-center">Qty</div>
+                                                <div className="col-span-2 text-right">Price</div>
+                                            </div>
+                                            <div className="mt-4 space-y-4">
+                                                {items.map((item, index) => (
+                                                    <div key={index} className="grid grid-cols-12 gap-4 items-center text-sm group">
+                                                        <div className="col-span-1 text-center text-gray-600 font-mono group-hover:text-gym-neon transition-colors">{(index + 1).toString().padStart(2, '0')}</div>
+                                                        <div className="col-span-7 font-medium text-white">{item.name}</div>
+                                                        <div className="col-span-2 text-center text-gray-400">1</div>
+                                                        <div className="col-span-2 text-right text-white font-mono">Rs. {item.price.toLocaleString()}</div>
+                                                    </div>
+                                                ))}
+                                                {items.length === 0 && (
+                                                    <div className="text-center py-10 text-gray-600 italic">No items billed</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                <div className="mt-auto border-t-2 border-black pt-4 flex justify-between items-end">
-                                    <div className="text-sm text-gray-500 italic">
-                                        Thank you for your business.
+                                    {/* Footer / Total */}
+                                    <div className="mt-8 pt-8 border-t border-white/10">
+                                        <div className="flex justify-between items-end">
+                                            <div className="max-w-xs">
+                                                <h4 className="text-sm font-bold text-white mb-2">Payment Details</h4>
+                                                <p className="text-xs text-gray-500 mb-4">Please pay within 30 days of receiving this invoice.</p>
+
+                                                <div className="flex items-center gap-4 text-xs text-gray-400">
+                                                    <div>
+                                                        <p className="font-bold text-white mb-0.5">Contact</p>
+                                                        <p className="font-mono">+92 300 1234567</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 min-w-[300px]">
+                                                <div className="flex justify-between text-sm mb-3">
+                                                    <span className="text-gray-400">Subtotal</span>
+                                                    <span className="text-white font-mono">Rs. {total.toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm mb-3">
+                                                    <span className="text-gym-neon">Discount</span>
+                                                    <span className="text-gym-neon font-mono">- Rs. 0</span>
+                                                </div>
+                                                <div className="w-full h-px bg-white/10 my-4"></div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-lg font-bold text-white">Grand Total</span>
+                                                    <span className="text-3xl font-black text-gym-neon font-mono tracking-tight">
+                                                        Rs. {total.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Total Due</p>
-                                        <p className="text-3xl font-bold text-black">Rs. {total.toLocaleString()}</p>
-                                    </div>
+
+                                    {/* Neon Bar */}
+                                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-gym-neon to-transparent opacity-50"></div>
                                 </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                                <FileText size={48} className="mb-4 opacity-20" />
-                                <p>Select a member to view invoice preview</p>
+                            <div className="flex-1 flex flex-col items-center justify-center text-gray-600 relative z-10">
+                                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                    <FileText size={48} className="text-white/20" />
+                                </div>
+                                <p className="text-xl font-medium text-white/40">Select a member to generate invoice</p>
                             </div>
                         )}
                     </div>

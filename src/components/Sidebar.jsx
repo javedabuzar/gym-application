@@ -29,7 +29,7 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="h-screen w-64 bg-[#1a1a1a] border-r border-white/10 flex flex-col p-6 fixed left-0 top-0">
+        <div className="h-screen w-64 bg-black/30 backdrop-blur-xl border-r border-white/10 flex flex-col p-6 fixed left-0 top-0 z-50">
             <div className="flex items-center gap-3 mb-10">
                 <div className="w-8 h-8 bg-gym-neon rounded-lg shadow-[0_0_10px_#39ff14]"></div>
                 <h1 className="text-2xl font-bold text-white tracking-wider">GYM<span className="text-gym-neon">PRO</span></h1>
