@@ -35,7 +35,7 @@ const Sidebar = () => {
                 <h1 className="text-2xl font-bold text-white tracking-wider">GYM<span className="text-gym-neon">PRO</span></h1>
             </div>
 
-            <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar px-4">
+            <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar px-4 min-h-0">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.path;
