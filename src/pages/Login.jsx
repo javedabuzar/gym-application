@@ -19,7 +19,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#000032] relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-black/60 relative overflow-hidden">
             <div className="absolute inset-0 z-0">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gym-neon/20 rounded-full blur-[100px]"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/20 rounded-full blur-[100px]"></div>

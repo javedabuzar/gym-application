@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, Plus, MoreVertical, Trash2, CheckCircle, FileText, Download, QrCode, X, Camera, User } from 'lucide-react';
+import { Search, Plus, MoreVertical, Trash2, CheckCircle, FileText, Download, QrCode, X, Camera, User, Phone } from 'lucide-react';
 import { useGym } from '../context/GymContext';
 import { jsPDF } from 'jspdf';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -14,7 +14,7 @@ const Members = () => {
         const [showAddForm, setShowAddForm] = useState(false);
         const [isEditing, setIsEditing] = useState(false);
         const [currentMemberId, setCurrentMemberId] = useState(null);
-        const [newMember, setNewMember] = useState({ name: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
+        const [newMember, setNewMember] = useState({ name: '', contact: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
         const [selectedMemberQR, setSelectedMemberQR] = useState(null);
         const [isCameraOpen, setIsCameraOpen] = useState(false);
         const videoRef = useRef(null);
@@ -32,13 +32,14 @@ const Members = () => {
                 if (!res) return alert('Failed to add member');
             }
 
-            setNewMember({ name: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
+            setNewMember({ name: '', contact: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
             setShowAddForm(false);
         };
 
         const openEditForm = (member) => {
             setNewMember({
                 name: member.name,
+                contact: member.contact || '',
                 fee: member.fee,
                 payment: member.payment,
                 status: member.status,
@@ -67,8 +68,8 @@ const Members = () => {
 
         const exportCSV = () => {
             if (!members || members.length === 0) return alert("No members");
-            let csv = 'Name,Fee (Rs),Payment,Status\n';
-            members.forEach(m => { csv += `${m.name},${m.fee},${m.payment},${m.status}\n`; });
+            let csv = 'Name,Contact,Fee (Rs),Payment,Status\n';
+            members.forEach(m => { csv += `${m.name},${m.contact || ''},${m.fee},${m.payment},${m.status}\n`; });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -85,7 +86,7 @@ const Members = () => {
             doc.text("Gym Members", 14, 20);
             let y = 30;
             members.forEach(m => {
-                doc.text(`${m.name} | Fee: Rs. ${m.fee} | Payment: ${m.payment} | Status: ${m.status}`, 14, y);
+                doc.text(`${m.name} | ${m.contact || 'No Contact'} | Rs. ${m.fee} | ${m.status}`, 14, y);
                 y += 10;
             });
             doc.save('members.pdf');
@@ -150,7 +151,7 @@ const Members = () => {
                             onClick={() => {
                                 setShowAddForm(!showAddForm);
                                 setIsEditing(false);
-                                setNewMember({ name: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
+                                setNewMember({ name: '', contact: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
                                 stopCamera();
                             }}
                             className="bg-gym-neon text-black px-6 py-2.5 rounded-xl font-bold hover:bg-[#2ecc11] transition-colors shadow-[0_0_20px_rgba(57,255,20,0.3)] flex items-center gap-2"
@@ -215,6 +216,13 @@ const Members = () => {
                                 placeholder="Member Name"
                                 value={newMember.name}
                                 onChange={e => setNewMember({ ...newMember, name: e.target.value })}
+                                className="bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-gym-neon"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Contact Number"
+                                value={newMember.contact}
+                                onChange={e => setNewMember({ ...newMember, contact: e.target.value })}
                                 className="bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-gym-neon"
                             />
                             <input
@@ -284,6 +292,10 @@ const Members = () => {
                                                     <img src={member.profile || `https://i.pravatar.cc/150?u=${member.name}`} alt={member.name} className="w-10 h-10 rounded-full bg-white/10 object-cover" />
                                                     <div>
                                                         <h4 className="text-white font-medium">{member.name}</h4>
+                                                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                                                            <Phone size={12} />
+                                                            <span>{member.contact || 'No Contact'}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>

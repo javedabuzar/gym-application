@@ -14,7 +14,7 @@ const data = [
 ];
 
 const StatCard = ({ title, value, change, icon: Icon, color }) => (
-    <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-300 group">
+    <div className="bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-300 group">
         <div className="flex justify-between items-start mb-4">
             <div>
                 <p className="text-gray-400 text-sm font-medium mb-1">{title}</p>
@@ -78,7 +78,7 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5">
+                <div className="lg:col-span-2 bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5">
                     <h3 className="text-xl font-bold text-white mb-6">Weekly Visits</h3>
                     <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -102,7 +102,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="bg-gym-card backdrop-blur-xl p-6 rounded-2xl border border-white/5">
+                <div className="bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5">
                     <h3 className="text-xl font-bold text-white mb-6">Visits Bar</h3>
                     <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">

@@ -24,6 +24,7 @@ DROP TABLE IF EXISTS public.members CASCADE;
 CREATE TABLE public.members (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
+    contact TEXT, -- New Contact Number
     fee NUMERIC DEFAULT 0,
     payment TEXT DEFAULT 'Paid', -- 'Paid', 'Unpaid'
     status TEXT DEFAULT 'Active', -- 'Active', 'Inactive'
