@@ -55,7 +55,7 @@ const Sidebar = () => {
                 })}
             </nav>
 
-            <div className="pt-6 border-t border-white/10 space-y-2 px-4">
+            <div className="pt-2 space-y-2 px-4">
                 <Link to="/settings" className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
                     <Settings size={20} />
                     <span className="font-medium">Settings</span>
