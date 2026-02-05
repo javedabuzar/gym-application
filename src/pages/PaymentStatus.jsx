@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useGym } from '../context/GymContext';
-import { CheckCircle, AlertCircle, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle, AlertCircle, Search, Users } from 'lucide-react';
 
 const PaymentStatus = () => {
     const { members, updateMember } = useGym();
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredMembers = members.filter(m =>
@@ -75,15 +77,24 @@ const PaymentStatus = () => {
                     <h2 className="text-3xl font-bold text-white">Payment Status</h2>
                     <p className="text-gray-400 mt-1">Track Paid vs Unpaid Memberships</p>
                 </div>
-                <div className="relative w-full max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search members..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-gym-neon/50"
-                    />
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => navigate('/members')}
+                        className="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                        <Users size={20} />
+                        Members
+                    </button>
+                    <div className="relative w-full max-w-xs">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search members..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-gym-neon/50"
+                        />
+                    </div>
                 </div>
             </div>
 

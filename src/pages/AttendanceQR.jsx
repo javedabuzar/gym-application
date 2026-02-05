@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGym } from '../context/GymContext';
-import { QrCode, CheckCircle, XCircle, Camera, Printer, Download, Users, RefreshCw } from 'lucide-react';
+import { QrCode, CheckCircle, XCircle, Camera, Printer, Download, Users, RefreshCw, SwitchCamera } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { QRCodeCanvas } from 'qrcode.react';
 import html2canvas from 'html2canvas';
@@ -15,6 +15,7 @@ const AttendanceQR = () => {
 
     // --- Scanner Logic ---
     const [isScanning, setIsScanning] = useState(false);
+    const [facingMode, setFacingMode] = useState('environment'); // Default to back camera
     const scannerRef = useRef(null);
     const isScanningRef = useRef(false); // Ref to track scanning state synchronously
 
@@ -40,7 +41,7 @@ const AttendanceQR = () => {
             }
 
             await scannerRef.current.start(
-                { facingMode: "environment" },
+                { facingMode: facingMode },
                 {
                     fps: 10,
                     qrbox: { width: 250, height: 250 }
@@ -78,6 +79,19 @@ const AttendanceQR = () => {
                 isScanningRef.current = false;
                 setIsScanning(false);
             }
+        }
+    };
+
+    const toggleCamera = async () => {
+        if (isScanning && scannerRef.current) {
+            await stopScanner();
+            setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
+            // Allow state to update then restart
+            setTimeout(() => {
+                startScanner();
+            }, 100);
+        } else {
+            setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
         }
     };
 
@@ -175,6 +189,18 @@ const AttendanceQR = () => {
                                     >
                                         <Camera size={24} />
                                         Start Camera
+                                    </button>
+                                </div>
+                            )}
+
+                            {isScanning && (
+                                <div className="absolute top-4 right-4 z-10">
+                                    <button
+                                        onClick={toggleCamera}
+                                        className="bg-black/50 text-white p-2 rounded-full backdrop-blur-sm hover:bg-black/70 transition-all"
+                                        title="Flip Camera"
+                                    >
+                                        <SwitchCamera size={24} />
                                     </button>
                                 </div>
                             )}

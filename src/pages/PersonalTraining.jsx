@@ -5,12 +5,12 @@ import { Dumbbell, Settings, UserCheck, Star, Trophy, Users, Save, Plus, X, Cale
 
 const PersonalTraining = () => {
     const { members, ptSettings, setPtSettings, ptSubscriptions, setPtSubscriptions } = useGym();
-    
+
     const [showSettings, setShowSettings] = useState(false);
     const [showAddPlan, setShowAddPlan] = useState(false);
     const [selectedMember, setSelectedMember] = useState(null);
     const [selectedDuration, setSelectedDuration] = useState('one_month');
-    
+
     // Local settings state
     const [localSettings, setLocalSettings] = useState({
         one_month: ptSettings?.rates?.one_month || 20000,
@@ -48,7 +48,7 @@ const PersonalTraining = () => {
         const price = newPlan.customPrice || localSettings[newPlan.duration];
         const startDate = new Date();
         const endDate = new Date();
-        
+
         // Calculate end date based on duration
         switch (newPlan.duration) {
             case 'one_month':
@@ -136,29 +136,29 @@ const PersonalTraining = () => {
     ];
 
     const durations = [
-        { 
-            id: 'one_month', 
-            name: '1 Month', 
-            icon: UserCheck, 
-            color: 'text-blue-400', 
+        {
+            id: 'one_month',
+            name: '1 Month',
+            icon: UserCheck,
+            color: 'text-blue-400',
             bg: 'bg-blue-400/10',
             sessions: 12,
             description: '3 sessions per week'
         },
-        { 
-            id: 'six_months', 
-            name: '6 Months', 
-            icon: Star, 
-            color: 'text-gym-neon', 
+        {
+            id: 'six_months',
+            name: '6 Months',
+            icon: Star,
+            color: 'text-gym-neon',
             bg: 'bg-gym-neon/10',
             sessions: 72,
             description: '3 sessions per week'
         },
-        { 
-            id: 'one_year', 
-            name: '1 Year', 
-            icon: Trophy, 
-            color: 'text-yellow-400', 
+        {
+            id: 'one_year',
+            name: '1 Year',
+            icon: Trophy,
+            color: 'text-yellow-400',
             bg: 'bg-yellow-400/10',
             sessions: 144,
             description: '3 sessions per week'
@@ -177,9 +177,8 @@ const PersonalTraining = () => {
                 </div>
                 <button
                     onClick={() => setShowSettings(!showSettings)}
-                    className={`px-4 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-2 ${
-                        showSettings ? 'bg-gym-neon text-black' : 'bg-white/5 text-white hover:bg-white/10'
-                    }`}
+                    className={`px-4 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-2 ${showSettings ? 'bg-gym-neon text-black' : 'bg-white/5 text-white hover:bg-white/10'
+                        }`}
                 >
                     <Settings size={20} />
                     Admin Settings
@@ -251,7 +250,7 @@ const PersonalTraining = () => {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-white text-lg">{d.name}</h4>
-                                        <div className="text-sm font-bold text-gym-neon">Rs. {ptSettings.rates[d.id].toLocaleString()}</div>
+                                        <div className="text-sm font-bold text-gym-neon">Rs. {ptSettings?.rates?.[d.id]?.toLocaleString() || 'N/A'}</div>
                                     </div>
                                 </div>
                             </div>

@@ -8,6 +8,7 @@ export const useGym = () => useContext(GymContext);
 export const GymProvider = ({ children }) => {
     const [members, setMembers] = useState([]);
     const [attendance, setAttendance] = useState({});
+    const [payments, setPayments] = useState([]); // NEW: Payment History
     const [user, setUser] = useState(null);
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -109,6 +110,10 @@ export const GymProvider = ({ children }) => {
             setAttendance(attendanceMap);
         }
 
+        // --- NEW: Load Payment History ---
+        const { data: paymentsData } = await supabase.from('payments').select('*');
+        if (paymentsData) setPayments(paymentsData);
+
         // --- NEW: Load Settings from Supabase ---
         const { data: settingsData } = await supabase.from('gym_settings').select('*');
         if (settingsData) {
@@ -178,6 +183,32 @@ export const GymProvider = ({ children }) => {
         if (error) {
             console.error("Error updating member:", error);
             // Optionally revert here if strictly needed, but for 'extra' fields not in DB, we keep them locally
+        } else {
+            // NEW: Auto-log payment if marking as Paid
+            if (updates.payment === 'Paid') {
+                const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+
+                // Check local state to avoid duplicates (though DB unique constraint also protects)
+                const alreadyPaid = payments.some(p => p.member_id === id && p.month_year === currentMonth);
+
+                if (!alreadyPaid) {
+                    const memberFee = members.find(m => m.id === id)?.fee || baseGymFee;
+
+                    const { data: newPayment, error: payError } = await supabase.from('payments').insert([{
+                        member_id: id,
+                        month_year: currentMonth,
+                        amount: memberFee,
+                        status: 'Paid'
+                    }]).select();
+
+                    if (!payError && newPayment) {
+                        setPayments([...payments, newPayment[0]]);
+                        console.log("Auto-payment recorded:", newPayment[0]);
+                    } else if (payError) {
+                        console.error("Auto-payment failed (might be duplicate):", payError);
+                    }
+                }
+            }
         }
     };
 
@@ -347,6 +378,7 @@ export const GymProvider = ({ children }) => {
         <GymContext.Provider value={{
             members,
             attendance,
+            payments, // NEW
             addMember,
             updateMember,
             removeMember,

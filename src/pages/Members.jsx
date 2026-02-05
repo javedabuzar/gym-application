@@ -1,17 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { Search, Plus, MoreVertical, Trash2, CheckCircle, FileText, Download, QrCode, X, Camera, User, Phone } from 'lucide-react';
+import { Search, Plus, MoreVertical, Trash2, CheckCircle, FileText, Download, QrCode, X, Camera, User, Phone, Activity, CreditCard, SwitchCamera, Calendar } from 'lucide-react';
 import { useGym } from '../context/GymContext';
+import { useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import { QRCodeCanvas } from 'qrcode.react';
 
 const Members = () => {
+    const navigate = useNavigate();
     try {
-        const { members, addMember, removeMember, markAttendance, unmarkAttendance, updateMember, getMemberAttendance } = useGym();
+        const { members, attendance, addMember, removeMember, markAttendance, unmarkAttendance, updateMember, getMemberAttendance, payments } = useGym();
 
         console.log('✅ Members component loaded!', { members });
 
         const [searchTerm, setSearchTerm] = useState('');
         const [showAddForm, setShowAddForm] = useState(false);
+        const [selectedMemberReport, setSelectedMemberReport] = useState(null); // NEW: Report Modal Logic
         const [isEditing, setIsEditing] = useState(false);
         const [currentMemberId, setCurrentMemberId] = useState(null);
         const [newMember, setNewMember] = useState({ name: '', contact: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
@@ -141,6 +144,13 @@ const Members = () => {
                         <p className="text-gray-400 mt-1">Manage your gym members and their subscriptions</p>
                     </div>
                     <div className="flex gap-2">
+                        <button onClick={() => navigate('/status')} className="bg-purple-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-purple-700 transition-colors flex items-center gap-2">
+                            <Activity size={20} /> Status
+                        </button>
+                        <button onClick={() => navigate('/payment')} className="bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition-colors flex items-center gap-2">
+                            <CreditCard size={20} /> Payments
+                        </button>
+                        <div className="w-px h-10 bg-white/10 mx-1"></div>
                         <button onClick={exportCSV} className="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2">
                             <FileText size={20} /> CSV
                         </button>
@@ -287,11 +297,11 @@ const Members = () => {
                                 {filteredMembers && filteredMembers.length > 0 ? (
                                     filteredMembers.map((member) => (
                                         <tr key={member.id} className="hover:bg-white/5 transition-colors group">
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedMemberReport(member)}>
                                                 <div className="flex items-center gap-3">
                                                     <img src={member.profile || `https://i.pravatar.cc/150?u=${member.name}`} alt={member.name} className="w-10 h-10 rounded-full bg-white/10 object-cover" />
                                                     <div>
-                                                        <h4 className="text-white font-medium">{member.name}</h4>
+                                                        <h4 className="text-white font-medium hover:text-gym-neon transition-colors">{member.name}</h4>
                                                         <div className="flex items-center gap-1 text-xs text-gray-500">
                                                             <Phone size={12} />
                                                             <span>{member.contact || 'No Contact'}</span>
@@ -314,7 +324,10 @@ const Members = () => {
                                                 {new Date(member.join_date || Date.now()).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                                <button onClick={() => openEditForm(member)} className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors" title="Edit Member">
+                                                <button onClick={(e) => { e.stopPropagation(); setSelectedMemberReport(member); }} className="p-2 bg-gym-neon/10 text-gym-neon rounded-lg hover:bg-gym-neon/20 transition-colors" title="View Report">
+                                                    <FileText size={20} />
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); openEditForm(member); }} className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors" title="Edit Member">
                                                     <MoreVertical size={20} />
                                                 </button>
                                                 <button onClick={() => setSelectedMemberQR(member)} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Show QR">
@@ -359,22 +372,111 @@ const Members = () => {
                     </div>
                 </div>
 
-                {/* QR Modal */}
-                {selectedMemberQR && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedMemberQR(null)}>
-                        <div className="bg-white p-8 rounded-2xl text-center relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => setSelectedMemberQR(null)} className="absolute top-4 right-4 text-gray-500 hover:text-black">
-                                <X size={24} />
-                            </button>
-                            <h3 className="text-2xl font-bold text-black mb-2">{selectedMemberQR.name}</h3>
-                            <p className="text-gray-500 mb-6">Scan to mark attendance</p>
-                            <div className="flex justify-center mb-6">
-                                <QRCodeCanvas value={String(selectedMemberQR.id)} size={200} />
+
+
+                {/* Member Report Modal */}
+                {
+                    selectedMemberReport && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => setSelectedMemberReport(null)}>
+                            <div className="bg-gym-card border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+                                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/40">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gym-neon">
+                                            <img src={selectedMemberReport.profile || `https://i.pravatar.cc/150?u=${selectedMemberReport.name}`} alt={selectedMemberReport.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-bold text-white">{selectedMemberReport.name}</h2>
+                                            <p className="text-gym-neon text-sm">Annual Fee Report ({new Date().getFullYear()})</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setSelectedMemberReport(null)} className="text-gray-400 hover:text-white transition-colors">
+                                        <X size={24} />
+                                    </button>
+                                </div>
+
+                                <div className="p-8">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {Array.from({ length: 12 }).map((_, i) => {
+                                            const date = new Date(new Date().getFullYear(), i, 1);
+                                            const monthName = date.toLocaleString('default', { month: 'long' });
+                                            const monthKey = `${date.getFullYear()}-${String(i + 1).padStart(2, '0')}`;
+
+                                            // Check if paid
+                                            const isPaid = payments?.some(p => p.member_id === selectedMemberReport.id && p.month_year === monthKey && p.status === 'Paid');
+
+                                            // Status Logic
+                                            const currentMonthKey = new Date().toISOString().slice(0, 7); // YYYY-MM
+                                            const isPast = monthKey < currentMonthKey;
+                                            const isCurrent = monthKey === currentMonthKey;
+
+                                            let statusColor = "bg-white/5 border-white/10 text-gray-500";
+                                            let statusIcon = null;
+                                            let statusText = "Future";
+
+                                            if (isPaid) {
+                                                statusColor = "bg-green-500/10 border-green-500/50 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.2)]";
+                                                statusIcon = <CheckCircle size={16} />;
+                                                statusText = "Paid";
+                                            } else if (isPast) {
+                                                statusColor = "bg-red-500/10 border-red-500/50 text-red-500";
+                                                statusIcon = <X size={16} />;
+                                                statusText = "Unpaid";
+                                            } else if (isCurrent) {
+                                                statusColor = "bg-yellow-500/10 border-yellow-500/50 text-yellow-500 animate-pulse";
+                                                statusIcon = <Activity size={16} />;
+                                                statusText = "Pending";
+                                            }
+
+                                            // Attendance Count Logic
+                                            const memberAttendance = attendance[selectedMemberReport.id] || [];
+                                            const daysPresent = memberAttendance.filter(dateStr => dateStr.startsWith(monthKey)).length;
+
+                                            return (
+                                                <div key={i} className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 ${statusColor}`}>
+                                                    <span className="text-sm font-bold uppercase tracking-wider">{monthName}</span>
+                                                    <div className="flex items-center gap-1 text-xs font-medium">
+                                                        {statusIcon}
+                                                        <span>{statusText}</span>
+                                                    </div>
+                                                    {/* Attendance Count */}
+                                                    <div className="mt-2 text-xs text-center border-t border-white/10 pt-2 w-full">
+                                                        <p className="text-gray-400">Days Present</p>
+                                                        <p className="font-bold text-white text-lg">{daysPresent}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="p-6 bg-black/40 border-t border-white/10 flex justify-end">
+                                    <button onClick={() => setSelectedMemberReport(null)} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                                        Close Report
+                                    </button>
+                                </div>
                             </div>
-                            <p className="text-xs text-gray-400">ID: {selectedMemberQR.id}</p>
                         </div>
-                    </div>
-                )}
+                    )
+                }
+
+                {/* QR Modal */}
+                {
+                    selectedMemberQR && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedMemberQR(null)}>
+                            <div className="bg-white p-8 rounded-2xl text-center relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => setSelectedMemberQR(null)} className="absolute top-4 right-4 text-gray-500 hover:text-black">
+                                    <X size={24} />
+                                </button>
+                                <h3 className="text-2xl font-bold text-black mb-2">{selectedMemberQR.name}</h3>
+                                <p className="text-gray-500 mb-6">Scan to mark attendance</p>
+                                <div className="flex justify-center mb-6">
+                                    <QRCodeCanvas value={String(selectedMemberQR.id)} size={200} />
+                                </div>
+                                <p className="text-xs text-gray-400">ID: {selectedMemberQR.id}</p>
+                            </div>
+                        </div>
+                    )
+                }
             </div>
         );
     } catch (error) {

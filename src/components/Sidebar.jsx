@@ -11,15 +11,13 @@ const Sidebar = () => {
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
         { icon: Users, label: 'Members', path: '/members' },
+        { icon: Dumbbell, label: 'Training', path: '/training' },
         { icon: Calendar, label: 'Schedule', path: '/schedule' },
         { icon: FileText, label: 'Reports', path: '/reports' },
         { icon: QrCode, label: 'QR Scan', path: '/scan' },
         { icon: FlaskConical, label: 'Supplements', path: '/supplements' },
         { icon: Bike, label: 'Cardio', path: '/cardio' },
-        { icon: Dumbbell, label: 'Training', path: '/training' },
         { icon: Notebook, label: 'Plans', path: '/plans' },
-        { icon: Activity, label: 'Member Status', path: '/status' },
-        { icon: CreditCard, label: 'Payments', path: '/payment' },
         { icon: FileText, label: 'Slip / Invoice', path: '/invoice' },
     ];
 
