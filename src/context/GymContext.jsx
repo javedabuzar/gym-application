@@ -212,6 +212,100 @@ export const GymProvider = ({ children }) => {
         }
     };
 
+    const togglePaymentStatus = async (memberId, monthYear) => {
+        // Find existing record
+        const existingPayment = payments.find(p => p.member_id == memberId && p.month_year === monthYear);
+        const newStatus = existingPayment?.status === 'Paid' ? 'Unpaid' : 'Paid';
+
+        // OPTIMISTIC UPDATE: Update UI immediately
+        const tempId = Date.now(); // Temporary ID
+        const optimisticPayment = {
+            id: existingPayment?.id || tempId,
+            member_id: memberId,
+            month_year: monthYear,
+            status: newStatus,
+            amount: newStatus === 'Paid' ? (members.find(m => m.id == memberId)?.fee || baseGymFee) : 0
+        };
+
+        const previousPayments = [...payments];
+        const otherPayments = payments.filter(p => !(p.member_id == memberId && p.month_year === monthYear));
+        setPayments([...otherPayments, optimisticPayment]);
+
+        console.log(`Toggling payment for ${memberId} ${monthYear}: ${existingPayment?.status} -> ${newStatus}`);
+
+        const amount = optimisticPayment.amount;
+
+        const { data, error } = await supabase.from('payments').upsert([{
+            member_id: memberId,
+            month_year: monthYear,
+            amount: amount,
+            status: newStatus
+        }], { onConflict: 'member_id, month_year' }).select();
+
+        if (!error && data) {
+            // Update with real data from server (mainly for correct ID)
+            const confirmedPayment = data[0];
+            const others = payments.filter(p => !(p.member_id == memberId && p.month_year === monthYear));
+            // Note: We use the *current* state of payments here, but for safety in this simple context:
+            // We can just replace the optimistic one.
+            setPayments(prev => {
+                const filtered = prev.filter(p => !(p.member_id == memberId && p.month_year === monthYear));
+                return [...filtered, confirmedPayment];
+            });
+            return { success: true, status: newStatus };
+        } else {
+            console.error("Payment toggle error:", error);
+            // Revert changes
+            setPayments(previousPayments);
+            return { success: false, message: error ? error.message : 'Unknown error' };
+        }
+    };
+
+    const updatePaymentStatus = async (memberId, monthYear, status) => {
+        console.log(`Setting payment for ${memberId} ${monthYear} to ${status}`);
+
+        // OPTIMISTIC UPDATE
+        const existingPayment = payments.find(p => p.member_id == memberId && p.month_year === monthYear);
+        const previousPayments = [...payments];
+
+        const optimisticPayment = {
+            id: existingPayment?.id || Date.now(),
+            member_id: memberId,
+            month_year: monthYear,
+            status: status,
+            amount: status === 'Paid' ? (members.find(m => m.id == memberId)?.fee || baseGymFee) : 0
+        };
+
+        // Apply optimistic state
+        setPayments(prev => {
+            const filtered = prev.filter(p => !(p.member_id == memberId && p.month_year === monthYear));
+            return [...filtered, optimisticPayment];
+        });
+
+        const amount = optimisticPayment.amount;
+
+        const { data, error } = await supabase.from('payments').upsert([{
+            member_id: memberId,
+            month_year: monthYear,
+            amount: amount,
+            status: status
+        }], { onConflict: 'member_id, month_year' }).select();
+
+        if (!error && data) {
+            const confirmedPayment = data[0];
+            setPayments(prev => {
+                const filtered = prev.filter(p => !(p.member_id == memberId && p.month_year === monthYear));
+                return [...filtered, confirmedPayment];
+            });
+            return { success: true, status: status };
+        } else {
+            console.error("Payment update error:", error);
+            // Revert changes
+            setPayments(previousPayments);
+            return { success: false, message: error ? error.message : 'Unknown error' };
+        }
+    };
+
     const removeMember = async (id) => {
         const { error } = await supabase.from('members').delete().eq('id', id);
         if (!error) {
@@ -383,7 +477,10 @@ export const GymProvider = ({ children }) => {
             updateMember,
             removeMember,
             markAttendance,
+
             unmarkAttendance, // NEW
+            togglePaymentStatus, // NEW
+            updatePaymentStatus, // NEW
             getMemberAttendance,
             user,
             loading,

@@ -8,7 +8,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 const Members = () => {
     const navigate = useNavigate();
     try {
-        const { members, attendance, addMember, removeMember, markAttendance, unmarkAttendance, updateMember, getMemberAttendance, payments } = useGym();
+        const { members, attendance, addMember, removeMember, markAttendance, unmarkAttendance, updateMember, getMemberAttendance, payments, togglePaymentStatus, updatePaymentStatus } = useGym();
 
         console.log('✅ Members component loaded!', { members });
 
@@ -17,7 +17,8 @@ const Members = () => {
         const [selectedMemberReport, setSelectedMemberReport] = useState(null); // NEW: Report Modal Logic
         const [isEditing, setIsEditing] = useState(false);
         const [currentMemberId, setCurrentMemberId] = useState(null);
-        const [newMember, setNewMember] = useState({ name: '', contact: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
+
+        const [newMember, setNewMember] = useState({ name: '', contact: '', fee: '', status: 'Active', profile: '' });
         const [selectedMemberQR, setSelectedMemberQR] = useState(null);
         const [isCameraOpen, setIsCameraOpen] = useState(false);
         const videoRef = useRef(null);
@@ -35,7 +36,7 @@ const Members = () => {
                 if (!res) return alert('Failed to add member');
             }
 
-            setNewMember({ name: '', contact: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
+            setNewMember({ name: '', contact: '', fee: '', status: 'Active', profile: '' });
             setShowAddForm(false);
         };
 
@@ -43,8 +44,8 @@ const Members = () => {
             setNewMember({
                 name: member.name,
                 contact: member.contact || '',
+
                 fee: member.fee,
-                payment: member.payment,
                 status: member.status,
                 profile: member.profile || ''
             });
@@ -161,7 +162,8 @@ const Members = () => {
                             onClick={() => {
                                 setShowAddForm(!showAddForm);
                                 setIsEditing(false);
-                                setNewMember({ name: '', contact: '', fee: '', payment: 'Paid', status: 'Active', profile: '' });
+
+                                setNewMember({ name: '', contact: '', fee: '', status: 'Active', profile: '' });
                                 stopCamera();
                             }}
                             className="bg-gym-neon text-black px-6 py-2.5 rounded-xl font-bold hover:bg-[#2ecc11] transition-colors shadow-[0_0_20px_rgba(57,255,20,0.3)] flex items-center gap-2"
@@ -242,14 +244,7 @@ const Members = () => {
                                 onChange={e => setNewMember({ ...newMember, fee: e.target.value })}
                                 className="bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-gym-neon"
                             />
-                            <select
-                                value={newMember.payment}
-                                onChange={e => setNewMember({ ...newMember, payment: e.target.value })}
-                                className="bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-gym-neon"
-                            >
-                                <option value="Paid" className="bg-gray-800">Paid</option>
-                                <option value="Unpaid" className="bg-gray-800">Unpaid</option>
-                            </select>
+
                             <select
                                 value={newMember.status}
                                 onChange={e => setNewMember({ ...newMember, status: e.target.value })}
@@ -286,8 +281,8 @@ const Members = () => {
                             <thead>
                                 <tr className="border-b border-white/5 text-gray-400 text-sm">
                                     <th className="px-6 py-4 font-medium">Member</th>
+
                                     <th className="px-6 py-4 font-medium">Fee</th>
-                                    <th className="px-6 py-4 font-medium">Payment</th>
                                     <th className="px-6 py-4 font-medium">Status</th>
                                     <th className="px-6 py-4 font-medium">Joined Date</th>
                                     <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -310,11 +305,6 @@ const Members = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-white">Rs. {member.fee}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`font-medium ${member.payment === 'Paid' ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {member.payment}
-                                                </span>
-                                            </td>
                                             <td className="px-6 py-4">
                                                 <span className={`font-medium ${member.status === 'Active' ? 'text-gym-neon' : 'text-gray-400'}`}>
                                                     {member.status}
@@ -387,6 +377,15 @@ const Members = () => {
                                         <div>
                                             <h2 className="text-xl font-bold text-white">{selectedMemberReport.name}</h2>
                                             <p className="text-gym-neon text-sm">Annual Fee Report ({new Date().getFullYear()})</p>
+                                            <div className="flex gap-4 mt-2">
+                                                <span className="text-xs font-semibold text-green-400 bg-green-500/10 px-2 py-1 rounded">
+                                                    Paid: {payments?.filter(p => p.member_id === selectedMemberReport.id && p.status === 'Paid' && p.month_year.startsWith(new Date().getFullYear())).length || 0}
+                                                </span>
+                                                <span className="text-xs font-semibold text-red-400 bg-red-500/10 px-2 py-1 rounded">
+                                                    Unpaid: {12 - (payments?.filter(p => p.member_id === selectedMemberReport.id && p.status === 'Paid' && p.month_year.startsWith(new Date().getFullYear())).length || 0)}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">Click any month to toggle payment status</p>
                                         </div>
                                     </div>
                                     <button onClick={() => setSelectedMemberReport(null)} className="text-gray-400 hover:text-white transition-colors">
@@ -401,8 +400,10 @@ const Members = () => {
                                             const monthName = date.toLocaleString('default', { month: 'long' });
                                             const monthKey = `${date.getFullYear()}-${String(i + 1).padStart(2, '0')}`;
 
-                                            // Check if paid
-                                            const isPaid = payments?.some(p => p.member_id === selectedMemberReport.id && p.month_year === monthKey && p.status === 'Paid');
+                                            // Check payment status
+                                            const paymentRecord = payments?.find(p => p.member_id == selectedMemberReport.id && p.month_year === monthKey);
+                                            const isPaid = paymentRecord?.status === 'Paid';
+                                            const isExplicitUnpaid = paymentRecord?.status === 'Unpaid';
 
                                             // Status Logic
                                             const currentMonthKey = new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -417,6 +418,10 @@ const Members = () => {
                                                 statusColor = "bg-green-500/10 border-green-500/50 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.2)]";
                                                 statusIcon = <CheckCircle size={16} />;
                                                 statusText = "Paid";
+                                            } else if (isExplicitUnpaid) {
+                                                statusColor = "bg-red-500/10 border-red-500/50 text-red-500";
+                                                statusIcon = <X size={16} />;
+                                                statusText = "Unpaid";
                                             } else if (isPast) {
                                                 statusColor = "bg-red-500/10 border-red-500/50 text-red-500";
                                                 statusIcon = <X size={16} />;
@@ -432,16 +437,45 @@ const Members = () => {
                                             const daysPresent = memberAttendance.filter(dateStr => dateStr.startsWith(monthKey)).length;
 
                                             return (
-                                                <div key={i} className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 ${statusColor}`}>
+                                                <div key={i} onClick={async () => {
+                                                    const result = await togglePaymentStatus(selectedMemberReport.id, monthKey);
+                                                    if (!result.success && result.message) alert(`Error: ${result.message}`);
+                                                }} className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 cursor-pointer ${statusColor}`}>
                                                     <span className="text-sm font-bold uppercase tracking-wider">{monthName}</span>
                                                     <div className="flex items-center gap-1 text-xs font-medium">
                                                         {statusIcon}
                                                         <span>{statusText}</span>
                                                     </div>
+
                                                     {/* Attendance Count */}
                                                     <div className="mt-2 text-xs text-center border-t border-white/10 pt-2 w-full">
-                                                        <p className="text-gray-400">Days Present</p>
-                                                        <p className="font-bold text-white text-lg">{daysPresent}</p>
+                                                        <p className="text-gray-400">Days Present: <span className="text-white font-bold">{daysPresent}</span></p>
+                                                    </div>
+
+                                                    {/* Explicit Actions */}
+                                                    <div className="flex gap-2 mt-2 w-full">
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                const result = await updatePaymentStatus(selectedMemberReport.id, monthKey, 'Paid');
+                                                                if (!result.success && result.message) alert(`Error: ${result.message}`);
+                                                            }}
+                                                            className={`flex-1 py-1 text-xs font-bold rounded ${isPaid ? 'bg-green-500 text-black cursor-default' : 'bg-white/10 text-gray-400 hover:bg-green-500/20 hover:text-green-500'}`}
+                                                            disabled={isPaid}
+                                                        >
+                                                            Paid
+                                                        </button>
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                const result = await updatePaymentStatus(selectedMemberReport.id, monthKey, 'Unpaid');
+                                                                if (!result.success && result.message) alert(`Error: ${result.message}`);
+                                                            }}
+                                                            className={`flex-1 py-1 text-xs font-bold rounded ${isExplicitUnpaid ? 'bg-red-500/20 text-red-500 cursor-default' : 'bg-white/10 text-gray-400 hover:bg-red-500/20 hover:text-red-500'}`}
+                                                            disabled={isExplicitUnpaid}
+                                                        >
+                                                            Unpaid
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -477,7 +511,7 @@ const Members = () => {
                         </div>
                     )
                 }
-            </div>
+            </div >
         );
     } catch (error) {
         console.error('❌ Members component error:', error);
