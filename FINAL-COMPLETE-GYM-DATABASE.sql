@@ -3,6 +3,7 @@
 -- ============================================
 -- Complete database for entire gym website
 -- Copy and paste this in Supabase SQL Editor
+-- WARNING: THIS WILL DELETE ALL EXISTING DATA
 -- ============================================
 
 -- ============================================
@@ -30,6 +31,7 @@ DROP INDEX IF EXISTS public.idx_invoices_status CASCADE;
 DROP INDEX IF EXISTS public.idx_cardio_subscriptions_member_id CASCADE;
 DROP INDEX IF EXISTS public.idx_cardio_subscriptions_status CASCADE;
 DROP INDEX IF EXISTS public.idx_gym_settings_category CASCADE;
+DROP INDEX IF EXISTS public.idx_payments_member_month CASCADE; -- Added
 
 -- Drop all views
 DROP VIEW IF EXISTS public.active_members_stats CASCADE;
@@ -41,6 +43,7 @@ DROP VIEW IF EXISTS public.class_schedule_view CASCADE;
 -- Drop all tables
 DROP TABLE IF EXISTS public.attendance CASCADE;
 DROP TABLE IF EXISTS public.classes CASCADE;
+DROP TABLE IF EXISTS public.payments CASCADE; -- Added
 DROP TABLE IF EXISTS public.members CASCADE;
 DROP TABLE IF EXISTS public.supplements CASCADE;
 DROP TABLE IF EXISTS public.cardio_sessions CASCADE;
@@ -78,7 +81,18 @@ CREATE TABLE public.attendance (
     UNIQUE(member_id, date)
 );
 
--- 3. CLASSES TABLE
+-- 3. PAYMENTS TABLE (NEW - Critical for Annual Fee Report)
+CREATE TABLE public.payments (
+    id BIGSERIAL PRIMARY KEY,
+    member_id BIGINT NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
+    amount NUMERIC DEFAULT 0,
+    month_year TEXT NOT NULL, -- Format: 'YYYY-MM'
+    status TEXT DEFAULT 'Paid' CHECK (status IN ('Paid', 'Unpaid')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(member_id, month_year)
+);
+
+-- 4. CLASSES TABLE
 CREATE TABLE public.classes (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -91,7 +105,7 @@ CREATE TABLE public.classes (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. SUPPLEMENTS TABLE
+-- 5. SUPPLEMENTS TABLE
 CREATE TABLE public.supplements (
     id BIGSERIAL PRIMARY KEY,
     member_id BIGINT REFERENCES public.members(id) ON DELETE CASCADE,
@@ -102,7 +116,7 @@ CREATE TABLE public.supplements (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. CARDIO SESSIONS TABLE
+-- 6. CARDIO SESSIONS TABLE
 CREATE TABLE public.cardio_sessions (
     id BIGSERIAL PRIMARY KEY,
     member_id BIGINT REFERENCES public.members(id) ON DELETE CASCADE,
@@ -113,7 +127,7 @@ CREATE TABLE public.cardio_sessions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 6. CARDIO SUBSCRIPTIONS TABLE
+-- 7. CARDIO SUBSCRIPTIONS TABLE
 CREATE TABLE public.cardio_subscriptions (
     id BIGSERIAL PRIMARY KEY,
     member_id BIGINT REFERENCES public.members(id) ON DELETE CASCADE,
@@ -127,7 +141,7 @@ CREATE TABLE public.cardio_subscriptions (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 7. TRAINING PLANS TABLE
+-- 8. TRAINING PLANS TABLE
 CREATE TABLE public.training_plans (
     id BIGSERIAL PRIMARY KEY,
     member_id BIGINT REFERENCES public.members(id) ON DELETE CASCADE,
@@ -146,7 +160,7 @@ CREATE TABLE public.training_plans (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 8. INVOICES TABLE
+-- 9. INVOICES TABLE
 CREATE TABLE public.invoices (
     id BIGSERIAL PRIMARY KEY,
     member_id BIGINT REFERENCES public.members(id) ON DELETE CASCADE,
@@ -160,7 +174,7 @@ CREATE TABLE public.invoices (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 9. GYM SETTINGS TABLE
+-- 10. GYM SETTINGS TABLE
 CREATE TABLE public.gym_settings (
     id BIGSERIAL PRIMARY KEY,
     category TEXT NOT NULL UNIQUE CHECK (category IN ('supplement', 'cardio', 'pt', 'general')),
@@ -179,6 +193,7 @@ CREATE INDEX idx_members_status ON public.members(status);
 CREATE INDEX idx_members_email ON public.members(email);
 CREATE INDEX idx_attendance_member_id ON public.attendance(member_id);
 CREATE INDEX idx_attendance_date ON public.attendance(date);
+CREATE INDEX idx_payments_member_month ON public.payments(member_id, month_year); -- Added
 CREATE INDEX idx_classes_day ON public.classes(day);
 CREATE INDEX idx_classes_time ON public.classes(time);
 CREATE INDEX idx_supplements_member_id ON public.supplements(member_id);
@@ -200,6 +215,7 @@ CREATE INDEX idx_gym_settings_category ON public.gym_settings(category);
 
 ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY; -- Added
 ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.supplements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cardio_sessions ENABLE ROW LEVEL SECURITY;
@@ -222,6 +238,12 @@ CREATE POLICY "Allow authenticated delete members" ON public.members FOR DELETE 
 CREATE POLICY "Allow authenticated read attendance" ON public.attendance FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Allow authenticated insert attendance" ON public.attendance FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Allow authenticated delete attendance" ON public.attendance FOR DELETE TO authenticated USING (true);
+
+-- Payments policies (Added)
+CREATE POLICY "Allow authenticated read payments" ON public.payments FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated insert payments" ON public.payments FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated update payments" ON public.payments FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated delete payments" ON public.payments FOR DELETE TO authenticated USING (true);
 
 -- Classes policies
 CREATE POLICY "Allow authenticated read classes" ON public.classes FOR SELECT TO authenticated USING (true);
@@ -313,6 +335,13 @@ INSERT INTO public.members (name, email, phone, fee, payment, status, profile) V
 ('Kamran Shah', 'kamran@gym.com', '0312-3456789', 3000, 'Paid', 'Active', 'https://i.pravatar.cc/150?u=kamran'),
 ('Nadia Iqbal', 'nadia@gym.com', '0313-4567890', 3500, 'Paid', 'Active', 'https://i.pravatar.cc/150?u=nadia'),
 ('Imran Malik', 'imran@gym.com', '0314-5678901', 4200, 'Unpaid', 'Active', 'https://i.pravatar.cc/150?u=imran')
+ON CONFLICT DO NOTHING;
+
+-- Sample Payments (for Annual Fee Report testing)
+INSERT INTO public.payments (member_id, amount, month_year, status)
+SELECT id, fee, TO_CHAR(NOW(), 'YYYY-MM'), 'Paid'
+FROM public.members
+WHERE payment = 'Paid'
 ON CONFLICT DO NOTHING;
 
 -- Sample Classes
@@ -556,6 +585,8 @@ SELECT
 UNION ALL
 SELECT 'attendance', COUNT(*) FROM public.attendance
 UNION ALL
+SELECT 'payments', COUNT(*) FROM public.payments -- Added
+UNION ALL
 SELECT 'classes', COUNT(*) FROM public.classes
 UNION ALL
 SELECT 'supplements', COUNT(*) FROM public.supplements
@@ -576,7 +607,7 @@ SELECT 'gym_settings', COUNT(*) FROM public.gym_settings;
 -- 
 -- YOUR COMPLETE GYM DATABASE IS READY!
 -- 
--- ✅ 9 Tables Created
+-- ✅ 10 Tables Created (Updated)
 -- ✅ All Indexes Added
 -- ✅ RLS Policies Configured
 -- ✅ Triggers Set Up
@@ -585,20 +616,6 @@ SELECT 'gym_settings', COUNT(*) FROM public.gym_settings;
 -- ✅ Sample Data for All Tables
 -- ✅ 5 Useful Views
 -- ✅ Complete Settings
--- 
--- SUPPORTED PAGES:
--- ✅ Members - Full member management
--- ✅ Dashboard - Analytics & stats
--- ✅ Attendance QR - QR attendance system
--- ✅ Schedule - Class management
--- ✅ Reports - Revenue & attendance reports
--- ✅ Cardio - Cardio membership plans
--- ✅ Personal Training - PT programs
--- ✅ Training Plan - Workout plans
--- ✅ Supplements - Supplement sales
--- ✅ Invoice - Invoice management
--- ✅ Settings - App configuration
--- ✅ Login - Authentication
 -- 
 -- NEXT STEPS:
 -- 1. Go to Supabase Authentication > Users

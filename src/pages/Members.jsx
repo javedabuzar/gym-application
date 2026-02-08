@@ -15,6 +15,8 @@ const Members = () => {
         const [searchTerm, setSearchTerm] = useState('');
         const [showAddForm, setShowAddForm] = useState(false);
         const [selectedMemberReport, setSelectedMemberReport] = useState(null); // NEW: Report Modal Logic
+        const [reportYear, setReportYear] = useState(new Date().getFullYear()); // NEW: Year Navigation
+        const [isUnlockMode, setIsUnlockMode] = useState(false); // NEW: Manual Override
         const [isEditing, setIsEditing] = useState(false);
         const [currentMemberId, setCurrentMemberId] = useState(null);
 
@@ -292,7 +294,7 @@ const Members = () => {
                                 {filteredMembers && filteredMembers.length > 0 ? (
                                     filteredMembers.map((member) => (
                                         <tr key={member.id} className="hover:bg-white/5 transition-colors group">
-                                            <td className="px-6 py-4 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedMemberReport(member)}>
+                                            <td className="px-6 py-4 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => { setReportYear(new Date().getFullYear()); setIsUnlockMode(false); setSelectedMemberReport(member); }}>
                                                 <div className="flex items-center gap-3">
                                                     <img src={member.profile || `https://i.pravatar.cc/150?u=${member.name}`} alt={member.name} className="w-10 h-10 rounded-full bg-white/10 object-cover" />
                                                     <div>
@@ -314,7 +316,7 @@ const Members = () => {
                                                 {new Date(member.join_date || Date.now()).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                                <button onClick={(e) => { e.stopPropagation(); setSelectedMemberReport(member); }} className="p-2 bg-gym-neon/10 text-gym-neon rounded-lg hover:bg-gym-neon/20 transition-colors" title="View Report">
+                                                <button onClick={(e) => { e.stopPropagation(); setReportYear(new Date().getFullYear()); setIsUnlockMode(false); setSelectedMemberReport(member); }} className="p-2 bg-gym-neon/10 text-gym-neon rounded-lg hover:bg-gym-neon/20 transition-colors" title="View Report">
                                                     <FileText size={20} />
                                                 </button>
                                                 <button onClick={(e) => { e.stopPropagation(); openEditForm(member); }} className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors" title="Edit Member">
@@ -376,16 +378,45 @@ const Members = () => {
                                         </div>
                                         <div>
                                             <h2 className="text-xl font-bold text-white">{selectedMemberReport.name}</h2>
-                                            <p className="text-gym-neon text-sm">Annual Fee Report ({new Date().getFullYear()})</p>
-                                            <div className="flex gap-4 mt-2">
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <button onClick={() => setReportYear(prev => prev - 1)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"><Calendar size={14} className="rotate-180" /></button>
+                                                <div className="flex items-center gap-1 text-gym-neon text-sm font-bold">
+                                                    <span>Annual Fee Report (</span>
+                                                    <input
+                                                        type="number"
+                                                        value={reportYear}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value);
+                                                            if (!isNaN(val)) setReportYear(val);
+                                                        }}
+                                                        className="w-12 bg-transparent text-center focus:outline-none border-b border-white/20 focus:border-gym-neon transition-colors"
+                                                    />
+                                                    <span>)</span>
+                                                </div>
+                                                <button onClick={() => setReportYear(prev => prev + 1)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"><Calendar size={14} /></button>
+                                            </div>
+                                            <div className="flex gap-4 mt-2 items-center">
                                                 <span className="text-xs font-semibold text-green-400 bg-green-500/10 px-2 py-1 rounded">
-                                                    Paid: {payments?.filter(p => p.member_id === selectedMemberReport.id && p.status === 'Paid' && p.month_year.startsWith(new Date().getFullYear())).length || 0}
+                                                    Paid: {payments?.filter(p => p.member_id === selectedMemberReport.id && p.status === 'Paid' && p.month_year.startsWith(String(reportYear))).length || 0}
                                                 </span>
                                                 <span className="text-xs font-semibold text-red-400 bg-red-500/10 px-2 py-1 rounded">
-                                                    Unpaid: {12 - (payments?.filter(p => p.member_id === selectedMemberReport.id && p.status === 'Paid' && p.month_year.startsWith(new Date().getFullYear())).length || 0)}
+                                                    Unpaid: {12 - (payments?.filter(p => p.member_id === selectedMemberReport.id && p.status === 'Paid' && p.month_year.startsWith(String(reportYear))).length || 0)}
                                                 </span>
+                                                {/* Manual Override Toggle */}
+                                                <button
+                                                    onClick={() => setIsUnlockMode(!isUnlockMode)}
+                                                    className={`ml-2 text-xs flex items-center gap-1 px-2 py-1 rounded border transition-colors ${isUnlockMode ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-white/5 text-gray-500 border-white/10'}`}
+                                                >
+                                                    {isUnlockMode ? (
+                                                        <><span>🔓</span> Unlocked</>
+                                                    ) : (
+                                                        <><span>🔒</span> Locked</>
+                                                    )}
+                                                </button>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-1">Click any month to toggle payment status</p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {isUnlockMode ? "Manual Override Active: Edit Any Month" : "Click any month to toggle payment status"}
+                                            </p>
                                         </div>
                                     </div>
                                     <button onClick={() => setSelectedMemberReport(null)} className="text-gray-400 hover:text-white transition-colors">
@@ -396,7 +427,7 @@ const Members = () => {
                                 <div className="p-8">
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                         {Array.from({ length: 12 }).map((_, i) => {
-                                            const date = new Date(new Date().getFullYear(), i, 1);
+                                            const date = new Date(reportYear, i, 1);
                                             const monthName = date.toLocaleString('default', { month: 'long' });
                                             const monthKey = `${date.getFullYear()}-${String(i + 1).padStart(2, '0')}`;
 
@@ -409,6 +440,7 @@ const Members = () => {
                                             const currentMonthKey = new Date().toISOString().slice(0, 7); // YYYY-MM
                                             const isPast = monthKey < currentMonthKey;
                                             const isCurrent = monthKey === currentMonthKey;
+                                            const canEdit = isCurrent || isUnlockMode; // Allow edit if current OR unlocked
 
                                             let statusColor = "bg-white/5 border-white/10 text-gray-500";
                                             let statusIcon = null;
@@ -438,9 +470,10 @@ const Members = () => {
 
                                             return (
                                                 <div key={i} onClick={async () => {
+                                                    if (!canEdit) return;
                                                     const result = await togglePaymentStatus(selectedMemberReport.id, monthKey);
                                                     if (!result.success && result.message) alert(`Error: ${result.message}`);
-                                                }} className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 cursor-pointer ${statusColor}`}>
+                                                }} className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${canEdit ? 'hover:scale-105 cursor-pointer' : 'opacity-50 cursor-not-allowed'} ${statusColor}`}>
                                                     <span className="text-sm font-bold uppercase tracking-wider">{monthName}</span>
                                                     <div className="flex items-center gap-1 text-xs font-medium">
                                                         {statusIcon}
@@ -457,22 +490,24 @@ const Members = () => {
                                                         <button
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
+                                                                if (!canEdit) return;
                                                                 const result = await updatePaymentStatus(selectedMemberReport.id, monthKey, 'Paid');
                                                                 if (!result.success && result.message) alert(`Error: ${result.message}`);
                                                             }}
-                                                            className={`flex-1 py-1 text-xs font-bold rounded ${isPaid ? 'bg-green-500 text-black cursor-default' : 'bg-white/10 text-gray-400 hover:bg-green-500/20 hover:text-green-500'}`}
-                                                            disabled={isPaid}
+                                                            className={`flex-1 py-1 text-xs font-bold rounded ${isPaid ? 'bg-green-500 text-black cursor-default' : 'bg-white/10 text-gray-400 ' + (canEdit ? 'hover:bg-green-500/20 hover:text-green-500' : '')}`}
+                                                            disabled={isPaid || !canEdit}
                                                         >
                                                             Paid
                                                         </button>
                                                         <button
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
+                                                                if (!canEdit) return;
                                                                 const result = await updatePaymentStatus(selectedMemberReport.id, monthKey, 'Unpaid');
                                                                 if (!result.success && result.message) alert(`Error: ${result.message}`);
                                                             }}
-                                                            className={`flex-1 py-1 text-xs font-bold rounded ${isExplicitUnpaid ? 'bg-red-500/20 text-red-500 cursor-default' : 'bg-white/10 text-gray-400 hover:bg-red-500/20 hover:text-red-500'}`}
-                                                            disabled={isExplicitUnpaid}
+                                                            className={`flex-1 py-1 text-xs font-bold rounded ${isExplicitUnpaid ? 'bg-red-500/20 text-red-500 cursor-default' : 'bg-white/10 text-gray-400 ' + (canEdit ? 'hover:bg-red-500/20 hover:text-red-500' : '')}`}
+                                                            disabled={isExplicitUnpaid || !canEdit}
                                                         >
                                                             Unpaid
                                                         </button>
