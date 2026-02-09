@@ -35,11 +35,18 @@ const StatCard = ({ title, value, change, icon: Icon, color }) => (
 );
 
 const Dashboard = () => {
-    const { members, attendance } = useGym();
+    const { members, attendance, payments } = useGym();
 
     const totalMembers = members.length;
     const activeMembers = members.filter(m => m.status === 'Active').length;
-    const totalRevenue = members.filter(m => m.payment === 'Paid').reduce((sum, m) => sum + Number(m.fee), 0);
+
+    // Calculate Revenue for Current Month from Payments Table
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; // Local YYYY-MM
+    const totalRevenue = payments
+        .filter(p => p.month_year === currentMonth && p.status === 'Paid')
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+
     const totalAttendance = Object.values(attendance).flat().length;
 
     // Calculate weekly visits for chart (last 7 days)
@@ -49,9 +56,15 @@ const Dashboard = () => {
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
-            const dateStr = d.toDateString();
+
+            // Format as YYYY-MM-DD to match context/DB
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
             const visits = Object.values(attendance).filter(dates => dates.includes(dateStr)).length;
-            result.push({ name: days[d.getDay()], visits, revenue: 0 }); // Revenue per day is hard to track without transaction dates, keeping 0 or mock
+            result.push({ name: days[d.getDay()], visits, revenue: 0 });
         }
         return result;
     };
