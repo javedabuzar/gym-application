@@ -494,6 +494,7 @@ const Members = () => {
 
                                             // Attendance Count Logic
                                             const memberAttendance = attendance[selectedMemberReport.id] || [];
+                                            console.log(`Checking attendance for Member ${selectedMemberReport.id} Month ${monthKey}:`, memberAttendance);
                                             const daysPresent = memberAttendance.filter(dateStr => dateStr.startsWith(monthKey)).length;
 
                                             return (
