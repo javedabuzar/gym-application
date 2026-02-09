@@ -337,6 +337,9 @@ export const GymProvider = ({ children }) => {
                 [id]: [...memberAttendance, today]
             });
             return { success: true, message: 'Attendance marked!' };
+        } else if (error.code === '23505') {
+            console.warn("Attendance already marked (duplicate):", error);
+            return { success: false, message: 'Already marked for today' };
         } else {
             console.error("Error marking attendance:", error);
             return { success: false, message: 'Error marking attendance' };

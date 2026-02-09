@@ -18,6 +18,7 @@ const AttendanceQR = () => {
     const [facingMode, setFacingMode] = useState('environment'); // Default to back camera
     const scannerRef = useRef(null);
     const isScanningRef = useRef(false); // Ref to track scanning state synchronously
+    const lastScannedRef = useRef({ id: null, time: 0 });
 
     useEffect(() => {
         // Cleanup on unmount
@@ -47,7 +48,17 @@ const AttendanceQR = () => {
                     qrbox: { width: 250, height: 250 }
                 },
                 (decodedText) => {
-                    handleAttendanceMark(Number(decodedText));
+                    const scannedId = Number(decodedText);
+                    const now = Date.now();
+
+                    // Debounce Logic: Ignore if same ID scanned within 3 seconds
+                    if (lastScannedRef.current.id === scannedId && (now - lastScannedRef.current.time < 3000)) {
+                        console.log(`Ignored duplicate scan for ID ${scannedId}`);
+                        return;
+                    }
+
+                    lastScannedRef.current = { id: scannedId, time: now };
+                    handleAttendanceMark(scannedId);
                 },
                 (errorMessage) => {
                     // ignore errors for better UX
