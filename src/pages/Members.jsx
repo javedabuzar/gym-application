@@ -58,7 +58,13 @@ const Members = () => {
         };
 
         const handleMarkAttendance = async (id) => {
-            const today = new Date().toISOString().split('T')[0];
+            // Use local date for consistency
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
+
             const attendance = getMemberAttendance(id);
             const isPresent = attendance.includes(today);
 
@@ -349,13 +355,13 @@ const Members = () => {
                                                 </button>
                                                 <button
                                                     onClick={() => handleMarkAttendance(member.id)}
-                                                    className={`p-2 rounded-lg transition-colors ${getMemberAttendance(member.id).includes(new Date().toISOString().split('T')[0])
+                                                    className={`p-2 rounded-lg transition-colors ${getMemberAttendance(member.id).includes(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`)
                                                         ? 'text-green-500 bg-green-500/10 hover:bg-green-500/20'
                                                         : 'text-gray-400 hover:text-green-400 hover:bg-green-500/10'
                                                         }`}
-                                                    title={getMemberAttendance(member.id).includes(new Date().toISOString().split('T')[0]) ? "Unmark Attendance" : "Mark Attendance"}
+                                                    title={getMemberAttendance(member.id).includes(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`) ? "Unmark Attendance" : "Mark Attendance"}
                                                 >
-                                                    {getMemberAttendance(member.id).includes(new Date().toISOString().split('T')[0]) ? <CheckCircle size={20} fill="currentColor" className="text-green-500" /> : <CheckCircle size={20} />}
+                                                    {getMemberAttendance(member.id).includes(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`) ? <CheckCircle size={20} fill="currentColor" className="text-green-500" /> : <CheckCircle size={20} />}
                                                 </button>
                                                 <button onClick={() => removeMember(member.id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Remove Member">
                                                     <Trash2 size={20} />

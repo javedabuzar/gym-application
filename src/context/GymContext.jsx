@@ -320,7 +320,13 @@ export const GymProvider = ({ children }) => {
     };
 
     const markAttendance = async (id) => {
-        const today = new Date().toISOString().split('T')[0];
+        // Use local time instead of UTC to fix "missing" attendance issues
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const today = `${year}-${month}-${day}`;
+
         const memberAttendance = attendance[id] || [];
 
         if (memberAttendance.includes(today)) {
@@ -347,7 +353,13 @@ export const GymProvider = ({ children }) => {
     };
 
     const unmarkAttendance = async (id) => {
-        const today = new Date().toISOString().split('T')[0];
+        // Use local time instead of UTC
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const today = `${year}-${month}-${day}`;
+
         const memberAttendance = attendance[id] || [];
 
         if (!memberAttendance.includes(today)) {
