@@ -23,6 +23,7 @@ const Members = () => {
         const [newMember, setNewMember] = useState({ name: '', contact: '', fee: '', status: 'Active', profile: '' });
         const [selectedMemberQR, setSelectedMemberQR] = useState(null);
         const [isCameraOpen, setIsCameraOpen] = useState(false);
+        const [facingMode, setFacingMode] = useState('user'); // 'user' or 'environment'
         const videoRef = useRef(null);
         const canvasRef = useRef(null);
 
@@ -102,10 +103,18 @@ const Members = () => {
             member.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-        const startCamera = async () => {
+        const startCamera = async (mode = facingMode) => {
             setIsCameraOpen(true);
+            // Stop any existing tracks before starting new ones
+            if (videoRef.current && videoRef.current.srcObject) {
+                const tracks = videoRef.current.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: mode }
+                });
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                 }
@@ -114,6 +123,12 @@ const Members = () => {
                 alert("Could not access camera");
                 setIsCameraOpen(false);
             }
+        };
+
+        const switchCamera = async () => {
+            const newMode = facingMode === 'user' ? 'environment' : 'user';
+            setFacingMode(newMode);
+            await startCamera(newMode);
         };
 
         const stopCamera = () => {
@@ -186,7 +201,7 @@ const Members = () => {
                                 {isCameraOpen ? (
                                     <div className="relative w-full max-w-sm rounded-xl overflow-hidden shadow-2xl border-2 border-gym-neon">
                                         <video ref={videoRef} autoPlay playsInline className="w-full h-auto" />
-                                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 items-center">
                                             <button
                                                 onClick={stopCamera}
                                                 className="bg-red-500 text-white p-3 rounded-full shadow-lg hover:bg-red-600"
@@ -200,6 +215,13 @@ const Members = () => {
                                                 title="Take Photo"
                                             >
                                                 <div className="w-6 h-6 bg-black rounded-full" />
+                                            </button>
+                                            <button
+                                                onClick={switchCamera}
+                                                className="bg-gray-800/80 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 backdrop-blur-sm"
+                                                title="Switch Camera"
+                                            >
+                                                <SwitchCamera size={24} />
                                             </button>
                                         </div>
                                         <canvas ref={canvasRef} className="hidden" />
