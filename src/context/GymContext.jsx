@@ -163,8 +163,10 @@ export const GymProvider = ({ children }) => {
     const addMember = async (member) => {
         const { data, error } = await supabase.from('members').insert([{
             ...member,
+            contact: member.contact || '', // Ensure contact is passed even if empty
             join_date: new Date().toISOString(),
-            profile: `https://i.pravatar.cc/150?u=${member.name + Date.now()}`
+            // Only use default avatar if no profile image is provided
+            profile: member.profile || `https://i.pravatar.cc/150?u=${member.name + Date.now()}`
         }]).select();
 
         if (!error && data) {

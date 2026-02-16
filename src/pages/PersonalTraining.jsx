@@ -279,7 +279,14 @@ const PersonalTraining = () => {
                                     return (
                                         <tr key={member.id} className="hover:bg-white/5 transition-colors">
                                             <td className="px-6 py-4">
-                                                <span className="text-white font-medium">{member.name}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={member.profile || `https://i.pravatar.cc/150?u=${member.name}`}
+                                                        alt={member.name}
+                                                        className="w-10 h-10 rounded-full bg-white/10 object-cover"
+                                                    />
+                                                    <span className="text-white font-medium">{member.name}</span>
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 {sub ? (

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.members (
     payment TEXT DEFAULT 'Paid', -- 'Paid', 'Unpaid'
     status TEXT DEFAULT 'Active', -- 'Active', 'Inactive'
     profile TEXT, -- URL to image
+    contact TEXT, -- Phone Number
     
     -- Supplement Tracking (Populated by Supplements.jsx)
     scoops_creatine NUMERIC DEFAULT 0,

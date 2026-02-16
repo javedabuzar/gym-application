@@ -148,12 +148,33 @@ const Members = () => {
         const capturePhoto = () => {
             if (videoRef.current && canvasRef.current) {
                 const context = canvasRef.current.getContext('2d');
-                canvasRef.current.width = videoRef.current.videoWidth;
-                canvasRef.current.height = videoRef.current.videoHeight;
 
-                context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+                // Set a reasonable size for the profile picture (e.g., 400x400)
+                const size = 400;
+                canvasRef.current.width = size;
+                canvasRef.current.height = size;
 
-                const imageDateUrl = canvasRef.current.toDataURL('image/jpeg');
+                // Center crop logic
+                const videoWidth = videoRef.current.videoWidth;
+                const videoHeight = videoRef.current.videoHeight;
+                const videoRatio = videoWidth / videoHeight;
+
+                let sx = 0, sy = 0, sWidth = videoWidth, sHeight = videoHeight;
+
+                if (videoRatio > 1) {
+                    // Video is wider than square
+                    sWidth = videoHeight;
+                    sx = (videoWidth - sWidth) / 2;
+                } else {
+                    // Video is taller than square
+                    sHeight = videoWidth;
+                    sy = (videoHeight - sHeight) / 2;
+                }
+
+                context.drawImage(videoRef.current, sx, sy, sWidth, sHeight, 0, 0, size, size);
+
+                // Use slightly lower quality to ensure small payload
+                const imageDateUrl = canvasRef.current.toDataURL('image/jpeg', 0.8);
                 setNewMember({ ...newMember, profile: imageDateUrl });
                 stopCamera();
             }
