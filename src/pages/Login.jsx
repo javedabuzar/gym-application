@@ -27,6 +27,7 @@ const Login = () => {
 
             <div className="bg-gym-card backdrop-blur-xl p-8 rounded-2xl border border-white/10 w-full max-w-md relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
                 <div className="text-center mb-8">
+                    <img src="/logo.jpg" alt="PRO FLEX FITNESS GYM" className="h-24 w-auto mx-auto mb-6 object-contain drop-shadow-[0_0_15px_rgba(57,255,20,0.3)]" />
                     <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
                     <p className="text-gray-400">Sign in to manage your gym</p>
                 </div>

@@ -361,20 +361,10 @@ const AttendanceQR = () => {
                                     <div className="w-[55%] h-full p-6 flex flex-col justify-between relative z-30 bg-[#1a1a1a]">
                                         <div className="text-right">
                                             <div className="flex items-center justify-end gap-2 mb-1">
-                                                <div className="text-[#39ff14]">
-                                                    {/* Dumbbell Icon SVG */}
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M6.5 6.5h11"></path>
-                                                        <path d="M6.5 17.5h11"></path>
-                                                        <path d="M6 20v-5"></path>
-                                                        <path d="M18 20v-5"></path>
-                                                        <path d="M6 9V4"></path>
-                                                        <path d="M18 9V4"></path>
-                                                    </svg>
+                                                <div className="flex items-center justify-end gap-2 mb-1">
+                                                    <img src="/logo.jpg" alt="PRO FLEX" className="h-24 w-auto object-contain drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]" />
                                                 </div>
-                                                <h1 className="text-2xl font-black text-white italic tracking-tighter">GYMPRO</h1>
                                             </div>
-                                            <p className="text-xs text-white/60 tracking-widest uppercase">Shape your body</p>
                                         </div>
 
                                         <div className="bg-[#39ff14] text-black text-center py-1.5 font-bold text-sm -mx-6 my-2 shadow-lg relative">

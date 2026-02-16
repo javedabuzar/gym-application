@@ -240,21 +240,8 @@ const Invoice = () => {
                                     {/* Header */}
                                     <div className="flex justify-between items-start mb-12 border-b border-white/10 pb-8">
                                         <div className="flex flex-col">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-10 h-10 bg-gym-neon rounded-lg flex items-center justify-center transform rotate-3 shadow-[0_0_15px_rgba(57,255,20,0.4)]">
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M6.5 6.5h11"></path>
-                                                        <path d="M6.5 17.5h11"></path>
-                                                        <path d="M6 20v-5"></path>
-                                                        <path d="M18 20v-5"></path>
-                                                        <path d="M6 9V4"></path>
-                                                        <path d="M18 9V4"></path>
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <h2 className="text-2xl font-black italic tracking-tighter text-white leading-none">GYMPRO</h2>
-                                                    <p className="text-[10px] text-gym-neon tracking-[0.3em] uppercase">Shape Your Body</p>
-                                                </div>
+                                            <div className="mb-4">
+                                                <img src="/logo.jpg" alt="PRO FLEX FITNESS GYM" className="h-32 w-auto object-contain drop-shadow-[0_0_15px_rgba(57,255,20,0.3)]" />
                                             </div>
                                         </div>
                                         <div className="text-right">

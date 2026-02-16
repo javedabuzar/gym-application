@@ -28,9 +28,8 @@ const Sidebar = () => {
 
     return (
         <div className="h-screen w-64 bg-black/30 backdrop-blur-xl border-r border-white/10 flex flex-col py-6 fixed left-0 top-0 z-50">
-            <div className="flex items-center gap-3 mb-10 px-6">
-                <div className="w-8 h-8 bg-gym-neon rounded-lg shadow-[0_0_10px_#39ff14]"></div>
-                <h1 className="text-2xl font-bold text-white tracking-wider">GYM<span className="text-gym-neon">PRO</span></h1>
+            <div className="flex items-center justify-center mb-10 px-6">
+                <img src="/logo.jpg" alt="PRO FLEX FITNESS GYM" className="h-20 w-auto object-contain drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]" />
             </div>
 
             <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar px-4 min-h-0">
