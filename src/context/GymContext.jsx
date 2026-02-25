@@ -12,6 +12,8 @@ export const GymProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [adminAccount, setAdminAccount] = useState(null);
+    const [adminStatusLoading, setAdminStatusLoading] = useState(false);
 
     // Core Settings
     const [baseGymFee, setBaseGymFee] = useState(3000); // Base Monthly Membership (PKR)
@@ -56,10 +58,87 @@ export const GymProvider = ({ children }) => {
         return () => subscription.unsubscribe();
     }, []);
 
-    const fetchData = async () => {
-        if (!user) return;
+    const isAdminApproved =
+        adminAccount?.approval_status === 'approved' &&
+        adminAccount?.payment_status === 'approved' &&
+        adminAccount?.is_active === true;
 
-        let { data: membersData } = await supabase.from('members').select('*');
+    const ensureAdminAccount = async (authUser) => {
+        if (!authUser?.id) return;
+
+        const meta = authUser.user_metadata || {};
+        const planType = meta.plan_type || 'monthly';
+        const planPrice = Number(meta.plan_price || 5000);
+
+        // Use INSERT (not upsert) to avoid overwriting an already-approved account
+        const { error } = await supabase.from('admin_accounts').insert({
+            user_id: authUser.id,
+            full_name: meta.full_name || authUser.email,
+            gym_name: meta.gym_name || 'New Gym',
+            email: authUser.email,
+            plan_type: planType,
+            plan_price: planPrice,
+            payment_status: 'pending',
+            approval_status: 'pending',
+            is_active: false
+        });
+
+        // 23505 = unique_violation (row already exists) — expected and safe to ignore
+        if (error && error.code !== '23505') {
+            console.error('Error ensuring admin account:', error);
+        }
+    };
+
+    const fetchAdminAccount = async (authUser) => {
+        const userId = authUser?.id;
+        if (!userId) {
+            setAdminAccount(null);
+            return null;
+        }
+
+        setAdminStatusLoading(true);
+        const { data, error } = await supabase
+            .from('admin_accounts')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (error) {
+            console.error('Error loading admin account:', error);
+            setAdminAccount(null);
+            setAdminStatusLoading(false);
+            return null;
+        }
+
+        if (!data) {
+            await ensureAdminAccount(authUser);
+            const { data: retryData } = await supabase
+                .from('admin_accounts')
+                .select('*')
+                .eq('user_id', userId)
+                .maybeSingle();
+
+            setAdminAccount(retryData || null);
+            setAdminStatusLoading(false);
+            return retryData || null;
+        }
+
+        setAdminAccount(data || null);
+        setAdminStatusLoading(false);
+        return data || null;
+    };
+
+    const fetchData = async () => {
+        if (!user || !isAdminApproved) return;
+
+        const ownerId = user.id;
+        console.log('📡 fetchData — ownerId:', ownerId);
+
+        let { data: membersData, error: membersError } = await supabase.from('members').select('*').eq('owner_id', ownerId);
+
+        if (membersError) {
+            console.error('❌ Error fetching members:', membersError);
+        }
 
         if (membersData) {
             // Check for monthly reset
@@ -94,10 +173,12 @@ export const GymProvider = ({ children }) => {
             setMembers(membersData);
         }
 
-        const { data: classesData } = await supabase.from('classes').select('*');
+        const { data: classesData, error: classesError } = await supabase.from('classes').select('*').eq('owner_id', ownerId);
+        if (classesError) console.error('❌ Error fetching classes:', classesError);
         if (classesData) setClasses(classesData);
 
-        const { data: attendanceData } = await supabase.from('attendance').select('*');
+        const { data: attendanceData, error: attendanceError } = await supabase.from('attendance').select('*').eq('owner_id', ownerId);
+        if (attendanceError) console.error('❌ Error fetching attendance:', attendanceError);
         if (attendanceData) {
             // Group attendance by member_id
             const attendanceMap = {};
@@ -111,11 +192,13 @@ export const GymProvider = ({ children }) => {
         }
 
         // --- NEW: Load Payment History ---
-        const { data: paymentsData } = await supabase.from('payments').select('*');
+        const { data: paymentsData, error: paymentsError } = await supabase.from('payments').select('*').eq('owner_id', ownerId);
+        if (paymentsError) console.error('❌ Error fetching payments:', paymentsError);
         if (paymentsData) setPayments(paymentsData);
 
         // --- NEW: Load Settings from Supabase ---
-        const { data: settingsData } = await supabase.from('gym_settings').select('*');
+        const { data: settingsData, error: settingsError } = await supabase.from('gym_settings').select('*').eq('owner_id', ownerId);
+        if (settingsError) console.error('❌ Error fetching settings:', settingsError);
         if (settingsData) {
             settingsData.forEach(setting => {
                 if (setting.category === 'supplement') setSupplementSettings(setting.settings);
@@ -125,7 +208,8 @@ export const GymProvider = ({ children }) => {
         }
 
         // --- NEW: Load Cardio Subscriptions ---
-        const { data: cardioData } = await supabase.from('cardio_subscriptions').select('*').eq('status', 'Active');
+        const { data: cardioData, error: cardioError } = await supabase.from('cardio_subscriptions').select('*').eq('owner_id', ownerId).eq('status', 'Active');
+        if (cardioError) console.error('❌ Error fetching cardio subscriptions:', cardioError);
         if (cardioData) {
             const cardioMap = {};
             cardioData.forEach(sub => {
@@ -141,7 +225,8 @@ export const GymProvider = ({ children }) => {
         }
 
         // --- NEW: Load PT Subscriptions ---
-        const { data: ptData } = await supabase.from('training_plans').select('*').eq('status', 'Active');
+        const { data: ptData, error: ptError } = await supabase.from('training_plans').select('*').eq('owner_id', ownerId).eq('status', 'Active');
+        if (ptError) console.error('❌ Error fetching training plans:', ptError);
         if (ptData) {
             const ptMap = {};
             ptData.forEach(plan => {
@@ -157,12 +242,114 @@ export const GymProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        fetchData();
+        if (!user?.id) {
+            setAdminAccount(null);
+            return;
+        }
+        fetchAdminAccount(user);
     }, [user]);
+
+    useEffect(() => {
+        fetchData();
+    }, [user, isAdminApproved]);
+
+    const registerAdmin = async ({ fullName, gymName, email, password, planType }) => {
+        const planPrices = {
+            monthly: 5000,
+            six_months: 25000,
+            yearly: 45000
+        };
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    gym_name: gymName,
+                    plan_type: planType,
+                    plan_price: planPrices[planType] || 5000,
+                    role: 'admin_owner'
+                }
+            }
+        });
+        if (signUpError) {
+            console.error('Signup failed:', {
+                message: signUpError.message,
+                status: signUpError.status,
+                code: signUpError.code,
+                details: signUpError
+            });
+        }
+
+        if (signUpError) {
+            return {
+                success: false,
+                message: signUpError.message || 'Signup failed. Check Supabase Auth settings/logs.'
+            };
+        }
+
+        const newUserId = signUpData?.user?.id;
+
+        if (!newUserId) {
+            return {
+                success: false,
+                message: 'Account created but no user session found. Please verify email and log in.'
+            };
+        }
+
+        // The database trigger (on_auth_user_created) automatically creates the
+        // admin_accounts row from user_metadata, so the payment dashboard will
+        // see the request immediately. We still try a client-side insert as a
+        // backup in case the trigger hasn't been applied to the database yet.
+
+        const adminPayload = {
+            id: newUserId,
+            email,
+            user_metadata: {
+                full_name: fullName,
+                gym_name: gymName,
+                plan_type: planType,
+                plan_price: planPrices[planType] || 5000
+            }
+        };
+
+        // If signup returned a session (email confirmation disabled), we're
+        // already authenticated and can insert directly.
+        if (signUpData?.session) {
+            await ensureAdminAccount(adminPayload);
+            await supabase.auth.signOut();
+            return {
+                success: true,
+                message: 'Account created and request sent to super admin! Complete payment via QR and wait for approval.'
+            };
+        }
+
+        // No session from signup — try signing in explicitly (works when
+        // Supabase auto-confirms but doesn't return a session object).
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError) {
+            await ensureAdminAccount(adminPayload);
+            await supabase.auth.signOut();
+            return {
+                success: true,
+                message: 'Account created and request sent to super admin! Complete payment via QR and wait for approval.'
+            };
+        }
+
+        // Sign-in failed (email confirmation required). The database trigger
+        // has already created the admin_accounts row, so it will still appear
+        // on the payment dashboard.
+        return {
+            success: true,
+            message: 'Account created! Please check your email to verify, then log in. Your request has been sent to the super admin.'
+        };
+    };
 
     const addMember = async (member) => {
         const { data, error } = await supabase.from('members').insert([{
             ...member,
+            owner_id: user.id,
             contact: member.contact || '', // Ensure contact is passed even if empty
             join_date: new Date().toISOString(),
             // Only use default avatar if no profile image is provided
@@ -198,6 +385,7 @@ export const GymProvider = ({ children }) => {
 
                     const { data: newPayment, error: payError } = await supabase.from('payments').insert([{
                         member_id: id,
+                        owner_id: user.id,
                         month_year: currentMonth,
                         amount: memberFee,
                         status: 'Paid'
@@ -239,6 +427,7 @@ export const GymProvider = ({ children }) => {
 
         const { data, error } = await supabase.from('payments').upsert([{
             member_id: memberId,
+            owner_id: user.id,
             month_year: monthYear,
             amount: amount,
             status: newStatus
@@ -288,6 +477,7 @@ export const GymProvider = ({ children }) => {
 
         const { data, error } = await supabase.from('payments').upsert([{
             member_id: memberId,
+            owner_id: user.id,
             month_year: monthYear,
             amount: amount,
             status: status
@@ -336,7 +526,7 @@ export const GymProvider = ({ children }) => {
         }
 
         const { error } = await supabase.from('attendance').insert([
-            { member_id: id, date: today }
+            { member_id: id, owner_id: user.id, date: today }
         ]);
 
         if (!error) {
@@ -406,7 +596,7 @@ export const GymProvider = ({ children }) => {
     };
 
     const addClass = async (newClass) => {
-        const { data, error } = await supabase.from('classes').insert([newClass]).select();
+        const { data, error } = await supabase.from('classes').insert([{ ...newClass, owner_id: user.id }]).select();
         if (!error && data) {
             setClasses([...classes, data[0]]);
             return data[0];
@@ -435,8 +625,8 @@ export const GymProvider = ({ children }) => {
 
         // Save to Supabase
         const { error } = await supabase.from('gym_settings').upsert(
-            { category, settings: newSettings },
-            { onConflict: 'category' }
+            { owner_id: user.id, category, settings: newSettings },
+            { onConflict: 'owner_id, category' }
         );
 
         if (error) {
@@ -454,6 +644,7 @@ export const GymProvider = ({ children }) => {
         // Save to Supabase
         const { error } = await supabase.from('cardio_subscriptions').insert({
             member_id: memberId,
+            owner_id: user.id,
             duration: plan.duration,
             type: plan.type,
             price: plan.price,
@@ -474,6 +665,7 @@ export const GymProvider = ({ children }) => {
         // Save to Supabase (training_plans table)
         const { error } = await supabase.from('training_plans').insert({
             member_id: memberId,
+            owner_id: user.id,
             plan_name: 'Personal Training',
             plan_type: plan.duration,
             trainer_name: 'Assigned Trainer', // Default or pass in
@@ -501,9 +693,14 @@ export const GymProvider = ({ children }) => {
             getMemberAttendance,
             user,
             loading,
+            adminAccount,
+            adminStatusLoading,
+            isAdminApproved,
             classes,
             login,
             logout,
+            registerAdmin,
+            refreshAdminAccount: () => fetchAdminAccount(user),
             addClass,
             removeClass,
             baseGymFee, setBaseGymFee,

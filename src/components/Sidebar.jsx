@@ -9,21 +9,21 @@ const Sidebar = () => {
     const { logout } = useGym();
 
     const menuItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-        { icon: Users, label: 'Members', path: '/members' },
-        { icon: Dumbbell, label: 'Training', path: '/training' },
-        { icon: Calendar, label: 'Schedule', path: '/schedule' },
-        { icon: FileText, label: 'Reports', path: '/reports' },
-        { icon: QrCode, label: 'QR Scan', path: '/scan' },
-        { icon: FlaskConical, label: 'Supplements', path: '/supplements' },
-        { icon: Bike, label: 'Cardio', path: '/cardio' },
-        { icon: Notebook, label: 'Plans', path: '/plans' },
-        { icon: FileText, label: 'Slip / Invoice', path: '/invoice' },
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
+        { icon: Users, label: 'Members', path: '/app/members' },
+        { icon: Dumbbell, label: 'Training', path: '/app/training' },
+        { icon: Calendar, label: 'Schedule', path: '/app/schedule' },
+        { icon: FileText, label: 'Reports', path: '/app/reports' },
+        { icon: QrCode, label: 'QR Scan', path: '/app/scan' },
+        { icon: FlaskConical, label: 'Supplements', path: '/app/supplements' },
+        { icon: Bike, label: 'Cardio', path: '/app/cardio' },
+        { icon: Notebook, label: 'Plans', path: '/app/plans' },
+        { icon: FileText, label: 'Slip / Invoice', path: '/app/invoice' },
     ];
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        navigate('/');
     };
 
     return (
@@ -53,7 +53,7 @@ const Sidebar = () => {
             </nav>
 
             <div className="pt-2 space-y-2 px-4">
-                <Link to="/settings" className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+                <Link to="/app/settings" className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
                     <Settings size={20} />
                     <span className="font-medium">Settings</span>
                 </Link>

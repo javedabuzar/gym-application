@@ -4,15 +4,15 @@ import { useGym } from '../context/GymContext';
 import { Lock, User } from 'lucide-react';
 
 const Login = () => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { login } = useGym();
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        if (await login(username, password)) {
-            navigate('/');
+        if (await login(email, password)) {
+            navigate('/app');
         } else {
             alert('Invalid credentials');
         }
@@ -34,15 +34,15 @@ const Login = () => {
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-gray-400 mb-2 text-sm">Username</label>
+                        <label className="block text-gray-400 mb-2 text-sm">Email</label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
                             <input
                                 type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-gym-neon transition-colors"
-                                placeholder="Enter username"
+                                placeholder="Enter email"
                             />
                         </div>
                     </div>
