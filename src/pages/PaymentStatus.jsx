@@ -13,7 +13,7 @@ const PaymentStatus = () => {
     );
 
     const paidMembers = filteredMembers.filter(m => m.payment === 'Paid');
-    const unpaidMembers = filteredMembers.filter(m => m.payment === 'Unpaid');
+    const unpaidMembers = filteredMembers.filter(m => (m.payment || 'Unpaid') === 'Unpaid');
 
     const PaymentList = ({ title, list, icon: Icon, colorClass, emptyMessage }) => (
         <div className="bg-gym-card backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden flex-1">
@@ -79,7 +79,7 @@ const PaymentStatus = () => {
                 </div>
                 <div className="flex gap-4">
                     <button
-                        onClick={() => navigate('/members')}
+                        onClick={() => navigate('/app/members')}
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
                         <Users size={20} />

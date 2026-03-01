@@ -11,6 +11,8 @@ const Sidebar = () => {
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
         { icon: Users, label: 'Members', path: '/app/members' },
+        { icon: Activity, label: 'Member Status', path: '/app/status' },
+        { icon: CreditCard, label: 'Payment Status', path: '/app/payment' },
         { icon: Dumbbell, label: 'Training', path: '/app/training' },
         { icon: Calendar, label: 'Schedule', path: '/app/schedule' },
         { icon: FileText, label: 'Reports', path: '/app/reports' },

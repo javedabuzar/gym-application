@@ -12,7 +12,7 @@ const MemberStatus = () => {
         m.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const activeMembers = filteredMembers.filter(m => m.status === 'Active');
+    const activeMembers = filteredMembers.filter(m => (m.status || 'Active') === 'Active');
     const inactiveMembers = filteredMembers.filter(m => m.status === 'Inactive');
 
     const MemberList = ({ title, list, icon: Icon, colorClass, emptyMessage }) => (
@@ -41,9 +41,9 @@ const MemberStatus = () => {
                                     </div>
                                 </div>
                                 <div className={`px-3 py-1 rounded-full text-xs font-bold ${colorClass.replace('text-white', '')} bg-black/20`}>
-                                    {member.status}
+                                    {member.status || 'Active'}
                                 </div>
-                                {member.status === 'Active' ? (
+                                {(member.status || 'Active') === 'Active' ? (
                                     <button
                                         onClick={() => updateMember(member.id, { status: 'Inactive' })}
                                         className="ml-4 p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors text-xs font-bold"
@@ -79,7 +79,7 @@ const MemberStatus = () => {
                 </div>
                 <div className="flex gap-4">
                     <button
-                        onClick={() => navigate('/members')}
+                        onClick={() => navigate('/app/members')}
                         className="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
                         <Users size={20} />

@@ -20,7 +20,7 @@ const Members = () => {
         const [isEditing, setIsEditing] = useState(false);
         const [currentMemberId, setCurrentMemberId] = useState(null);
 
-        const [newMember, setNewMember] = useState({ name: '', contact: '', fee: '', status: 'Active', profile: '' });
+        const [newMember, setNewMember] = useState({ name: '', contact: '', fee: '', status: 'Active', payment: 'Unpaid', profile: '' });
         const [selectedMemberQR, setSelectedMemberQR] = useState(null);
         const [isCameraOpen, setIsCameraOpen] = useState(false);
         const [facingMode, setFacingMode] = useState('user'); // 'user' or 'environment'
@@ -39,7 +39,7 @@ const Members = () => {
                 if (!res) return alert('Failed to add member');
             }
 
-            setNewMember({ name: '', contact: '', fee: '', status: 'Active', profile: '' });
+            setNewMember({ name: '', contact: '', fee: '', status: 'Active', payment: 'Unpaid', profile: '' });
             setShowAddForm(false);
         };
 
@@ -189,10 +189,10 @@ const Members = () => {
                         <p className="text-gray-400 mt-1">Manage your gym members and their subscriptions</p>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => navigate('/status')} className="bg-purple-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-purple-700 transition-colors flex items-center gap-2">
+                        <button onClick={() => navigate('/app/status')} className="bg-purple-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-purple-700 transition-colors flex items-center gap-2">
                             <Activity size={20} /> Status
                         </button>
-                        <button onClick={() => navigate('/payment')} className="bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition-colors flex items-center gap-2">
+                        <button onClick={() => navigate('/app/payment')} className="bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition-colors flex items-center gap-2">
                             <CreditCard size={20} /> Payments
                         </button>
                         <div className="w-px h-10 bg-white/10 mx-1"></div>
@@ -207,7 +207,7 @@ const Members = () => {
                                 setShowAddForm(!showAddForm);
                                 setIsEditing(false);
 
-                                setNewMember({ name: '', contact: '', fee: '', status: 'Active', profile: '' });
+                                setNewMember({ name: '', contact: '', fee: '', status: 'Active', payment: 'Unpaid', profile: '' });
                                 stopCamera();
                             }}
                             className="bg-gym-neon text-black px-6 py-2.5 rounded-xl font-bold hover:bg-[#2ecc11] transition-colors shadow-[0_0_20px_rgba(57,255,20,0.3)] flex items-center gap-2"
