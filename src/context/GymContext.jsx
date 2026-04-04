@@ -92,8 +92,9 @@ export const GymProvider = ({ children }) => {
         if (!user || !isAdminApproved) return;
 
         const ownerId = user.id;
+        console.log('📡 fetchData — ownerId:', ownerId);
 
-        // --- Load Local Operational Data from Dexie (Filtered by Owner) ---
+        // --- 1. Load Local Operational Data from Dexie ---
         const localMembers = await db.members.where('owner_id').equals(ownerId).toArray();
         setMembers(localMembers);
 
@@ -108,7 +109,21 @@ export const GymProvider = ({ children }) => {
         const localPayments = await db.payments.where('owner_id').equals(ownerId).toArray();
         setPayments(localPayments);
 
-        // --- Load Local Settings from Dexie (Filtered by Owner) ---
+        const localClasses = await db.classes.where('owner_id').equals(ownerId).toArray();
+        setClasses(localClasses);
+
+        let localPlans = await db.plans.where('owner_id').equals(ownerId).toArray();
+        if (localPlans.length === 0) {
+            const defaults = [
+                { name: 'Basic', fee: 3000, owner_id: ownerId },
+                { name: 'Standard', fee: 5000, owner_id: ownerId },
+                { name: 'VIP', fee: 8000, owner_id: ownerId }
+            ];
+            for (const plan of defaults) { await db.plans.add(plan); }
+            localPlans = await db.plans.where('owner_id').equals(ownerId).toArray();
+        }
+        setPlans(localPlans);
+
         const localSettings = await db.gym_settings.where('owner_id').equals(ownerId).toArray();
         if (localSettings.length > 0) {
             localSettings.forEach(setting => {
@@ -118,7 +133,7 @@ export const GymProvider = ({ children }) => {
             });
         }
 
-        // --- Load Local Subscriptions from Dexie (Filtered by Owner & Active) ---
+        // --- 4. Load Subscriptions (Mapped for UI) ---
         const localCardio = await db.cardio_subscriptions
             .where('owner_id').equals(ownerId)
             .filter(sub => sub.status === 'Active')
@@ -146,25 +161,9 @@ export const GymProvider = ({ children }) => {
             };
         });
         setPtSubscriptions(ptMap);
-
-        const localClasses = await db.classes.where('owner_id').equals(ownerId).toArray();
-        setClasses(localClasses);
-
-        let localPlans = await db.plans.where('owner_id').equals(ownerId).toArray();
-        if (localPlans.length === 0) {
-            // Default Plans
-            const defaults = [
-                { name: 'Basic', fee: 3000, owner_id: ownerId },
-                { name: 'Standard', fee: 5000, owner_id: ownerId },
-                { name: 'VIP', fee: 8000, owner_id: ownerId }
-            ];
-            for (const plan of defaults) {
-                await db.plans.add(plan);
-            }
-            localPlans = await db.plans.where('owner_id').equals(ownerId).toArray();
-        }
-        setPlans(localPlans);
     };
+
+    // Removed syncWithCloud as per latest request (Local-only data)
 
     useEffect(() => {
         if (!user?.id) {
@@ -178,7 +177,7 @@ export const GymProvider = ({ children }) => {
         fetchData();
     }, [user, isAdminApproved]);
 
-    // Operational Functions (Dexie-only)
+    // Operational Functions (Dexie-only as requested)
     const addMember = async (member) => {
         const newMember = {
             ...member,
